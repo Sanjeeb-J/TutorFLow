@@ -29,7 +29,61 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const pathname = request.nextUrl.pathname;
+
+  // Protected routes that require authentication
+  const isProtectedRoute = pathname.startsWith("/tutor") || pathname.startsWith("/student");
+  const isLoginRoute = pathname === "/login";
+
+  // Unauthenticated user trying to access protected route
+  if (!user && isProtectedRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Authenticated user on login page — redirect to their dashboard
+  if (user && isLoginRoute) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${profile.role}`;
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Authenticated user on wrong role route — redirect to correct dashboard
+  if (user && isProtectedRoute) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile) {
+      const isTutorRoute = pathname.startsWith("/tutor");
+      const isStudentRoute = pathname.startsWith("/student");
+
+      if (profile.role === "tutor" && isStudentRoute) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/tutor";
+        return NextResponse.redirect(url);
+      }
+
+      if (profile.role === "student" && isTutorRoute) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/student";
+        return NextResponse.redirect(url);
+      }
+    }
+  }
 
   return supabaseResponse;
 }

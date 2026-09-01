@@ -1,6 +1,17 @@
+import { redirect } from "next/navigation";
+import { getUser, getProfile } from "@/lib/supabase/auth";
 import { BookOpen } from "lucide-react";
 
-export default function Home() {
+export default async function Home() {
+  const user = await getUser();
+
+  if (user) {
+    const profile = await getProfile();
+    if (profile) {
+      redirect(`/${profile.role}`);
+    }
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6">
       <div className="flex flex-col items-center text-center max-w-md">
@@ -16,14 +27,12 @@ export default function Home() {
           A focused workspace for one-to-one tutoring.
         </p>
 
-        <div className="mt-10 flex flex-col items-center gap-2">
-          <span className="text-xs font-medium tracking-wide uppercase text-muted">
-            Project setup
-          </span>
-          <span className="text-sm text-foreground">
-            Development environment ready
-          </span>
-        </div>
+        <a
+          href="/login"
+          className="mt-8 px-4 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent/90 transition-colors"
+        >
+          Sign in
+        </a>
       </div>
     </div>
   );
