@@ -2,11 +2,16 @@
 node_modules/
 .pnp
 .pnp.js
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
 # Next.js
 .next/
-out/
-build/
+/out/
+/build
 
 # Environment files
 .env
@@ -20,6 +25,7 @@ build/
 
 # Supabase
 .supabase/
+supabase/.temp/
 
 # Debug logs
 npm-debug.log*
@@ -32,5 +38,6 @@ coverage/
 
 # Misc
 .DS_Store
+*.pem
 *.tsbuildinfo
 next-env.d.ts
