@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import HomeworkToggle from "@/components/HomeworkToggle";
 
 export default async function StudentSessionDetailPage({
   params,
@@ -13,7 +14,6 @@ export default async function StudentSessionDetailPage({
   const profile = await getProfile();
   const supabase = await createClient();
 
-  // Get student record
   const { data: student } = await supabase
     .from("students")
     .select("id")
@@ -22,7 +22,6 @@ export default async function StudentSessionDetailPage({
 
   if (!student) notFound();
 
-  // Fetch session with ownership check via RLS
   const { data: session } = await supabase
     .from("sessions")
     .select("*, tutor:profiles!sessions_tutor_id_fkey(full_name)")
@@ -34,7 +33,32 @@ export default async function StudentSessionDetailPage({
 
   const startDt = new Date(session.start_at);
   const endDt = new Date(session.end_at);
-  const tutor = session.tutor as { full_name: string } | null;
+  const tutorArr = session.tutor as { full_name: string }[] | null;
+  const tutor = tutorArr?.[0];
+
+  const isReviewed = session.status === "ai_reviewed";
+  const isCompleted = session.status === "completed" || isReviewed;
+
+  // Fetch AI review if reviewed
+  let review = null;
+  let homework: Array<{ id: string; description: string; completed: boolean }> = [];
+  if (isReviewed) {
+    const { data: reviewData } = await supabase
+      .from("session_reviews")
+      .select("id, summary, next_topic")
+      .eq("session_id", id)
+      .single();
+    review = reviewData;
+
+    if (review) {
+      const { data: hwData } = await supabase
+        .from("homework_items")
+        .select("id, description, completed")
+        .eq("review_id", review.id)
+        .order("created_at", { ascending: true });
+      homework = hwData || [];
+    }
+  }
 
   const colors: Record<string, string> = {
     scheduled: "text-blue-700 bg-blue-50",
@@ -87,21 +111,46 @@ export default async function StudentSessionDetailPage({
           <div className="p-4 border border-border rounded-lg">
             <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{session.notes}</p>
           </div>
-        ) : session.status === "completed" || session.status === "ai_reviewed" ? (
+        ) : isCompleted ? (
           <p className="text-sm text-muted italic">No notes recorded for this session.</p>
         ) : (
           <p className="text-sm text-muted">Notes will be available after the session is completed.</p>
         )}
       </div>
 
-      {/* AI Review Placeholder */}
-      <div className="p-4 border border-dashed border-border rounded-lg">
-        <p className="text-sm text-muted">
-          {session.status === "ai_reviewed"
-            ? "AI review will be displayed here."
-            : "AI session review will be available after processing."}
-        </p>
-      </div>
+      {/* AI Review */}
+      {review ? (
+        <div className="space-y-4 mb-8">
+          <h2 className="text-lg font-semibold text-foreground">Session Review</h2>
+          <div className="p-4 border border-border rounded-lg">
+            <h3 className="text-sm font-medium text-foreground mb-2">Summary</h3>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{review.summary}</p>
+          </div>
+          {homework.length > 0 && (
+            <div className="p-4 border border-border rounded-lg">
+              <h3 className="text-sm font-medium text-foreground mb-2">Homework</h3>
+              <div className="space-y-2">
+                {homework.map((hw) => (
+                  <div key={hw.id} className="flex items-start gap-3">
+                    <HomeworkToggle id={hw.id} completed={hw.completed} />
+                    <p className={`text-sm ${hw.completed ? "text-muted line-through" : "text-foreground"}`}>
+                      {hw.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="p-4 border border-border rounded-lg">
+            <h3 className="text-sm font-medium text-foreground mb-2">Next Session</h3>
+            <p className="text-sm text-foreground">{review.next_topic}</p>
+          </div>
+        </div>
+      ) : isCompleted ? (
+        <div className="p-4 border border-dashed border-border rounded-lg">
+          <p className="text-sm text-muted">AI review will be available after processing.</p>
+        </div>
+      ) : null}
     </div>
   );
 }

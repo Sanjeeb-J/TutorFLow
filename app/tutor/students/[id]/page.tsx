@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import ProgressSummary from "@/components/ProgressSummary";
 
 export default async function StudentDetailPage({
   params,
@@ -127,6 +128,11 @@ export default async function StudentDetailPage({
         ) : (
           <p className="text-sm text-muted">No upcoming sessions.</p>
         )}
+      </div>
+
+      {/* Progress Summary */}
+      <div className="mb-8">
+        <ProgressSummary studentId={student.id} />
       </div>
 
       {/* Recent Sessions */}

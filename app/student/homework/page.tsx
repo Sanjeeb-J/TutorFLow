@@ -4,7 +4,7 @@ import { BookOpen } from "lucide-react";
 import HomeworkToggle from "@/components/HomeworkToggle";
 
 export default async function StudentHomeworkPage() {
-  const profile = await getProfile();
+  await getProfile();
   const supabase = await createClient();
 
   // Get homework items through the FK chain
