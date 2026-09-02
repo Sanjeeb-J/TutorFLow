@@ -6,8 +6,9 @@ export const GEMINI_MODEL = "gemini-2.5-flash";
  * Server-side only — never expose the API key.
  */
 async function callGeminiAPI(payload: {
-  contents: string;
-  config: Record<string, unknown>;
+  contents: Array<{ role: string; parts: Array<{ text: string }> }>;
+  systemInstruction?: { parts: Array<{ text: string }> };
+  generationConfig?: Record<string, unknown>;
 }): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
@@ -61,24 +62,30 @@ interface GenerateOptions {
 export async function generateContent(options: GenerateOptions): Promise<string> {
   const { prompt, systemInstruction, responseMimeType, responseSchema } = options;
 
-  const config: Record<string, unknown> = {};
+  const payload: {
+    contents: Array<{ role: string; parts: Array<{ text: string }> }>;
+    systemInstruction?: { parts: Array<{ text: string }> };
+    generationConfig?: Record<string, unknown>;
+  } = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+  };
 
   if (systemInstruction) {
-    config.systemInstruction = systemInstruction;
+    payload.systemInstruction = { parts: [{ text: systemInstruction }] };
   }
 
+  const generationConfig: Record<string, unknown> = {};
   if (responseMimeType) {
-    config.responseMimeType = responseMimeType;
+    generationConfig.responseMimeType = responseMimeType;
   }
-
   if (responseSchema) {
-    config.responseSchema = responseSchema;
+    generationConfig.responseSchema = responseSchema;
+  }
+  if (Object.keys(generationConfig).length > 0) {
+    payload.generationConfig = generationConfig;
   }
 
-  return callGeminiAPI({
-    contents: prompt,
-    config,
-  });
+  return callGeminiAPI(payload);
 }
 
 /**

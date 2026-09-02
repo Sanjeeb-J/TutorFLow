@@ -20,6 +20,17 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Verify tutor role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "tutor") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
   const { data: sessions } = await supabase
     .from("sessions")
     .select("id, topic, start_at, end_at, status, students(name)")
