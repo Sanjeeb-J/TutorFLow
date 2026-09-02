@@ -9,6 +9,8 @@ import {
 } from "@/lib/ai/prompts/progress-summary";
 import { getStudentAIContext } from "@/lib/ai/context";
 
+export const runtime = "nodejs";
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },

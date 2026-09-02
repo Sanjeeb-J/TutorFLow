@@ -1,18 +1,51 @@
-import { GoogleGenAI } from "@google/genai";
-
 export const GEMINI_MODEL = "gemini-2.5-flash";
 
-let _ai: GoogleGenAI | null = null;
-
-function getClient(): GoogleGenAI {
-  if (!_ai) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-      throw new Error("GEMINI_API_KEY environment variable is required");
-    }
-    _ai = new GoogleGenAI({ apiKey: key });
+/**
+ * Call the Gemini REST API directly via fetch.
+ * Avoids the @google/genai SDK which has ESM bundling issues with Next.js 16 / Turbopack.
+ * Server-side only — never expose the API key.
+ */
+async function callGeminiAPI(payload: {
+  contents: string;
+  config: Record<string, unknown>;
+}): Promise<string> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error("GEMINI_API_KEY environment variable is required");
   }
-  return _ai;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(60000),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Gemini API error (${res.status}): ${errorText.substring(0, 200)}`);
+  }
+
+  const data = await res.json();
+
+  const candidates = data.candidates;
+  if (!candidates || candidates.length === 0) {
+    throw new Error("Gemini returned no candidates");
+  }
+
+  const parts = candidates[0].content?.parts;
+  if (!parts || parts.length === 0) {
+    throw new Error("Gemini returned empty content");
+  }
+
+  const text = parts[0].text;
+  if (!text) {
+    throw new Error("Gemini returned empty text");
+  }
+
+  return text;
 }
 
 interface GenerateOptions {
@@ -24,11 +57,9 @@ interface GenerateOptions {
 
 /**
  * Generate content with Gemini.
- * Server-side only — never expose the API key.
  */
 export async function generateContent(options: GenerateOptions): Promise<string> {
   const { prompt, systemInstruction, responseMimeType, responseSchema } = options;
-  const client = getClient();
 
   const config: Record<string, unknown> = {};
 
@@ -44,18 +75,10 @@ export async function generateContent(options: GenerateOptions): Promise<string>
     config.responseSchema = responseSchema;
   }
 
-  const response = await client.models.generateContent({
-    model: GEMINI_MODEL,
+  return callGeminiAPI({
     contents: prompt,
     config,
   });
-
-  const text = response.text;
-  if (!text) {
-    throw new Error("Gemini returned an empty response");
-  }
-
-  return text;
 }
 
 /**
