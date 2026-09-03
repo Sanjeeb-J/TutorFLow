@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { AlertCircle, Loader2, RefreshCw, Sparkles } from "lucide-react";
 
 export default function ProgressSummary({ studentId }: { studentId: string }) {
   const [summary, setSummary] = useState<string | null>(null);
@@ -24,48 +24,59 @@ export default function ProgressSummary({ studentId }: { studentId: string }) {
       setSummary(data.summary);
       setLoading(false);
     } catch {
-      setError("Something went wrong.");
+      setError("Something went wrong. Please try again.");
       setLoading(false);
     }
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-foreground">Progress Summary</h2>
-        {!summary && !loading && (
-          <button
-            onClick={handleGenerate}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-accent border border-accent/30 rounded-md hover:bg-accent-light transition-colors"
-          >
-            <Sparkles className="w-4 h-4" strokeWidth={1.5} />
-            Generate summary
-          </button>
-        )}
-        {loading && (
-          <span className="text-sm text-muted flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 animate-pulse" strokeWidth={1.5} />
-            Generating...
-          </span>
-        )}
+    <div className="card p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-md text-sm leading-relaxed text-muted">
+          A written overview of this student&apos;s learning, drawn from their session
+          history and AI reviews.
+        </p>
+        {!loading &&
+          (summary ? (
+            <button onClick={handleGenerate} className="btn btn-ghost">
+              <RefreshCw className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+              Regenerate summary
+            </button>
+          ) : (
+            <button onClick={handleGenerate} className="btn btn-secondary">
+              <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+              Generate summary
+            </button>
+          ))}
       </div>
 
       {error && (
-        <div className="px-3 py-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md mb-3">
-          {error}
+        <div className="alert alert-error mt-4" role="alert">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
         </div>
       )}
 
-      {summary && (
-        <div className="p-4 border border-border rounded-lg">
-          <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{summary}</p>
+      {loading && (
+        <div className="mt-5" aria-live="polite">
+          <p className="flex items-center gap-2 text-sm text-muted">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            Analyzing session history…
+          </p>
+          <div className="mt-4 space-y-2.5" aria-hidden="true">
+            <div className="h-3 w-full animate-pulse rounded bg-surface-muted" />
+            <div className="h-3 w-11/12 animate-pulse rounded bg-surface-muted" />
+            <div className="h-3 w-4/5 animate-pulse rounded bg-surface-muted" />
+          </div>
         </div>
       )}
 
-      {!summary && !loading && !error && (
-        <p className="text-sm text-muted">
-          Generate a progress summary based on this student&apos;s session history and AI reviews.
-        </p>
+      {summary && !loading && (
+        <div className="mt-5 rounded-lg border border-border bg-surface-muted/40 p-4">
+          <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
+            {summary}
+          </p>
+        </div>
       )}
     </div>
   );

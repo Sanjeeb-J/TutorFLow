@@ -2,8 +2,28 @@ import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  Mail,
+  Pencil,
+  Sparkles,
+  Target,
+  TrendingDown,
+} from "lucide-react";
+import SessionRow from "@/components/SessionRow";
+import EmptyState from "@/components/EmptyState";
 import ProgressSummary from "@/components/ProgressSummary";
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 export default async function StudentDetailPage({
   params,
@@ -24,8 +44,8 @@ export default async function StudentDetailPage({
 
   if (!student) notFound();
 
-  // Fetch upcoming sessions for this student
   const now = new Date().toISOString();
+
   const { data: upcomingSessions } = await supabase
     .from("sessions")
     .select("id, topic, start_at, end_at, status")
@@ -35,7 +55,6 @@ export default async function StudentDetailPage({
     .order("start_at", { ascending: true })
     .limit(5);
 
-  // Fetch recent sessions
   const { data: recentSessions } = await supabase
     .from("sessions")
     .select("id, topic, start_at, end_at, status")
@@ -45,125 +64,169 @@ export default async function StudentDetailPage({
     .order("start_at", { ascending: false })
     .limit(5);
 
+  const contextBlocks: Array<{ label: string; icon: typeof Target; value: string | null }> = [
+    { label: "Learning goals", icon: Target, value: student.learning_goals },
+    { label: "Weak areas", icon: TrendingDown, value: student.weak_areas },
+  ];
+
   return (
-    <div className="max-w-4xl">
+    <div>
       <Link
         href="/tutor/students"
-        className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground mb-4 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         Back to students
       </Link>
 
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">{student.name}</h1>
-          <p className="text-sm text-muted mt-1">{student.subject}</p>
+      {/* Student header */}
+      <div className="card mt-4 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <span
+            aria-hidden="true"
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-accent-light text-lg font-semibold text-accent-strong"
+          >
+            {initials(student.name)}
+          </span>
+          <div className="min-w-0">
+            <h1 className="page-title truncate">{student.name}</h1>
+            <p className="mt-0.5 text-sm text-muted">
+              {student.subject}
+              {student.current_level ? ` · ${student.current_level}` : ""}
+            </p>
+          </div>
         </div>
-        <Link
-          href={`/tutor/students/${student.id}/edit`}
-          className="px-3 py-1.5 text-sm font-medium text-muted border border-border rounded-md hover:text-foreground hover:bg-accent-light/50 transition-colors"
+        <div className="flex items-center gap-2.5">
+          <Link
+            href={`/tutor/students/${student.id}/edit`}
+            className="btn btn-secondary"
+          >
+            <Pencil className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            Edit profile
+          </Link>
+          <Link href="/tutor/sessions/new" className="btn btn-primary">
+            Schedule session
+          </Link>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        {/* Main column */}
+        <div className="min-w-0 space-y-8">
+          <section aria-labelledby="upcoming-heading">
+            <h2 id="upcoming-heading" className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
+              <CalendarDays className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
+              Upcoming sessions
+            </h2>
+            {upcomingSessions && upcomingSessions.length > 0 ? (
+              <div className="space-y-2.5">
+                {upcomingSessions.map((s) => (
+                  <SessionRow
+                    key={s.id}
+                    id={s.id}
+                    topic={s.topic}
+                    startAt={s.start_at}
+                    endAt={s.end_at}
+                    status={s.status}
+                    href={`/tutor/sessions/${s.id}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={CalendarDays}
+                title="No upcoming sessions"
+                description={`Nothing scheduled for ${student.name} yet.`}
+              />
+            )}
+          </section>
+
+          <section aria-labelledby="recent-heading">
+            <h2 id="recent-heading" className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
+              <CheckCircle2 className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
+              Recent sessions
+            </h2>
+            {recentSessions && recentSessions.length > 0 ? (
+              <div className="space-y-2.5">
+                {recentSessions.map((s) => (
+                  <SessionRow
+                    key={s.id}
+                    id={s.id}
+                    topic={s.topic}
+                    startAt={s.start_at}
+                    endAt={s.end_at}
+                    status={s.status}
+                    href={`/tutor/sessions/${s.id}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={CheckCircle2}
+                title="No past sessions yet"
+                description="Completed sessions will show up here with their AI reviews."
+              />
+            )}
+          </section>
+        </div>
+
+        {/* Context column */}
+        <aside className="space-y-4" aria-label="Student profile">
+          <div className="card p-4">
+            <p className="section-kicker mb-3">Profile</p>
+            <dl className="space-y-3 text-sm">
+              {student.email && (
+                <div>
+                  <dt className="flex items-center gap-1.5 text-xs font-medium text-muted">
+                    <Mail className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    Email
+                  </dt>
+                  <dd className="mt-1 break-words text-foreground">{student.email}</dd>
+                </div>
+              )}
+              {student.current_level && (
+                <div>
+                  <dt className="text-xs font-medium text-muted">Current level</dt>
+                  <dd className="mt-1 text-foreground">{student.current_level}</dd>
+                </div>
+              )}
+              <div>
+                <dt className="text-xs font-medium text-muted">Subject</dt>
+                <dd className="mt-1 text-foreground">{student.subject}</dd>
+              </div>
+            </dl>
+          </div>
+
+          {contextBlocks
+            .filter((b) => b.value)
+            .map((b) => {
+              const Icon = b.icon;
+              return (
+                <div key={b.label} className="card p-4">
+                  <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
+                    <Icon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    {b.label}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                    {b.value}
+                  </p>
+                </div>
+              );
+            })}
+        </aside>
+      </div>
+
+      {/* AI progress summary */}
+      <section className="mt-10" aria-labelledby="progress-heading">
+        <h2
+          id="progress-heading"
+          className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground"
         >
-          Edit
-        </Link>
-      </div>
-
-      {/* Student Info */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        {student.email && (
-          <div className="p-4 border border-border rounded-lg">
-            <p className="text-xs font-medium text-muted uppercase tracking-wide mb-1">Email</p>
-            <p className="text-sm text-foreground">{student.email}</p>
-          </div>
-        )}
-        {student.current_level && (
-          <div className="p-4 border border-border rounded-lg">
-            <p className="text-xs font-medium text-muted uppercase tracking-wide mb-1">Level</p>
-            <p className="text-sm text-foreground">{student.current_level}</p>
-          </div>
-        )}
-        {student.learning_goals && (
-          <div className="p-4 border border-border rounded-lg sm:col-span-2">
-            <p className="text-xs font-medium text-muted uppercase tracking-wide mb-1">Learning Goals</p>
-            <p className="text-sm text-foreground whitespace-pre-wrap">{student.learning_goals}</p>
-          </div>
-        )}
-        {student.weak_areas && (
-          <div className="p-4 border border-border rounded-lg sm:col-span-2">
-            <p className="text-xs font-medium text-muted uppercase tracking-wide mb-1">Weak Areas</p>
-            <p className="text-sm text-foreground whitespace-pre-wrap">{student.weak_areas}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Upcoming Sessions */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-foreground mb-3">Upcoming Sessions</h2>
-        {upcomingSessions && upcomingSessions.length > 0 ? (
-          <div className="space-y-2">
-            {upcomingSessions.map((s) => (
-              <Link
-                key={s.id}
-                href={`/tutor/sessions/${s.id}`}
-                className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent-light/30 transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">{s.topic}</p>
-                  <p className="text-xs text-muted">
-                    {new Date(s.start_at).toLocaleDateString(undefined, {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}{" "}
-                    {new Date(s.start_at).toLocaleTimeString(undefined, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-                <span className="text-xs font-medium text-muted capitalize">{s.status.replace("_", " ")}</span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted">No upcoming sessions.</p>
-        )}
-      </div>
-
-      {/* Progress Summary */}
-      <div className="mb-8">
+          <Sparkles className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
+          AI progress summary
+        </h2>
         <ProgressSummary studentId={student.id} />
-      </div>
-
-      {/* Recent Sessions */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-3">Recent Sessions</h2>
-        {recentSessions && recentSessions.length > 0 ? (
-          <div className="space-y-2">
-            {recentSessions.map((s) => (
-              <Link
-                key={s.id}
-                href={`/tutor/sessions/${s.id}`}
-                className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent-light/30 transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">{s.topic}</p>
-                  <p className="text-xs text-muted">
-                    {new Date(s.start_at).toLocaleDateString(undefined, {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-                <span className="text-xs font-medium text-muted capitalize">{s.status.replace("_", " ")}</span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted">No past sessions yet.</p>
-        )}
-      </div>
+      </section>
     </div>
   );
 }

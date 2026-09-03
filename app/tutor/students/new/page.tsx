@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, KeyRound, UserPlus } from "lucide-react";
 
 export default function NewStudentPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,11 +17,31 @@ export default function NewStudentPage() {
   const [weakAreas, setWeakAreas] = useState("");
   const [tempPassword, setTempPassword] = useState("");
   const [created, setCreated] = useState(false);
-  const [createdStudent, setCreatedStudent] = useState<{ name: string; email: string } | null>(null);
+  const [createdStudent, setCreatedStudent] = useState<{
+    name: string;
+    email: string;
+    password: string;
+  } | null>(null);
+
+  function validate() {
+    const errors: Record<string, string> = {};
+    if (!name.trim()) errors.name = "Student name is required.";
+    if (!email.trim()) errors.email = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = "Enter a valid email address.";
+    }
+    if (!subject.trim()) errors.subject = "Subject is required.";
+    if (tempPassword && tempPassword.length < 8) {
+      errors.tempPassword = "Temporary password must be at least 8 characters.";
+    }
+    setClientErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (!validate()) return;
     setLoading(true);
 
     try {
@@ -47,7 +67,12 @@ export default function NewStudentPage() {
         return;
       }
 
-      setCreatedStudent({ name: data.student.name, email: data.student.email });
+      setCreatedStudent({
+        name: data.student.name,
+        email: data.student.email,
+        // Backend returns the generated password only when it auto-generated one
+        password: data.temp_password || tempPassword,
+      });
       setCreated(true);
       setLoading(false);
     } catch {
@@ -58,172 +83,221 @@ export default function NewStudentPage() {
 
   if (created && createdStudent) {
     return (
-      <div className="max-w-lg">
-        <h1 className="text-2xl font-semibold text-foreground mb-6">Student Created</h1>
-        <div className="p-4 border border-green-200 bg-green-50 rounded-lg mb-6">
-          <p className="text-sm text-green-800 font-medium">{createdStudent.name}</p>
-          <p className="text-sm text-green-700 mt-1">
-            Account created. The student can log in with:
-          </p>
-          <p className="text-sm text-green-700 mt-1">
-            Email: <span className="font-mono">{createdStudent.email}</span>
-          </p>
-          {tempPassword && (
-            <p className="text-sm text-green-700 mt-1">
-              Password: <span className="font-mono">{tempPassword}</span>
-            </p>
-          )}
-        </div>
-        <div className="flex gap-3">
-          <Link
-            href="/tutor/students"
-            className="px-3 py-2 text-sm font-medium text-foreground border border-border rounded-md hover:bg-accent-light/50 transition-colors"
-          >
-            Back to students
-          </Link>
+      <div className="mx-auto max-w-lg">
+        <div className="card overflow-hidden">
+          <div className="flex items-start gap-3 border-b border-border bg-success-light/60 px-6 py-5">
+            <CheckCircle2
+              className="mt-0.5 h-6 w-6 shrink-0 text-success"
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">
+                {createdStudent.name} was added
+              </h1>
+              <p className="mt-1 text-sm text-muted">
+                A student account has been created. Share the sign-in details below —
+                they&apos;re shown only once.
+              </p>
+            </div>
+          </div>
+
+          <dl className="space-y-4 px-6 py-5">
+            <div>
+              <dt className="text-xs font-medium uppercase tracking-wide text-muted">Email</dt>
+              <dd className="mt-1 break-all font-mono text-sm text-foreground">
+                {createdStudent.email}
+              </dd>
+            </div>
+            <div className="flex items-start gap-2">
+              <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} aria-hidden="true" />
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted">
+                  Temporary password
+                </dt>
+                <dd className="mt-1 break-all font-mono text-sm text-foreground">
+                  {createdStudent.password}
+                </dd>
+                <p className="mt-1 text-xs text-muted">
+                  The student can change this later if you set up password management.
+                </p>
+              </div>
+            </div>
+          </dl>
+
+          <div className="flex flex-wrap gap-2.5 border-t border-border bg-surface-muted/40 px-6 py-4">
+            <Link href="/tutor/students" className="btn btn-primary">
+              Back to students
+            </Link>
+            <Link href="/tutor/students/new" className="btn btn-secondary">
+              Add another student
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg">
+    <div className="mx-auto max-w-2xl">
       <Link
         href="/tutor/students"
-        className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground mb-4 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         Back to students
       </Link>
 
-      <h1 className="text-2xl font-semibold text-foreground mb-6">Add Student</h1>
+      <div className="mt-4">
+        <h1 className="page-title">Add student</h1>
+        <p className="mt-1 text-sm text-muted">
+          Create a profile for a new student and set up their login account.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} noValidate className="card mt-6 p-6">
         {error && (
-          <div className="px-3 py-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md">
-            {error}
+          <div className="alert alert-error mb-5" role="alert">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{error}</span>
           </div>
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="name" className="text-sm font-medium text-foreground">
-            Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            placeholder="Student name"
-          />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="field sm:col-span-2">
+            <label htmlFor="name" className="label">
+              Name <span className="text-danger">*</span>
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              aria-invalid={Boolean(clientErrors.name)}
+              className="input"
+              placeholder="e.g. Rahul Kumar"
+            />
+            {clientErrors.name && (
+              <p className="field-error" role="alert">{clientErrors.name}</p>
+            )}
+          </div>
+
+          <div className="field sm:col-span-2">
+            <label htmlFor="email" className="label">
+              Email <span className="text-danger">*</span>
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              aria-invalid={Boolean(clientErrors.email)}
+              className="input"
+              placeholder="student@example.com"
+            />
+            {clientErrors.email ? (
+              <p className="field-error" role="alert">{clientErrors.email}</p>
+            ) : (
+              <p className="hint">A login account will be created for this email.</p>
+            )}
+          </div>
+
+          <div className="field">
+            <label htmlFor="subject" className="label">
+              Subject <span className="text-danger">*</span>
+            </label>
+            <input
+              id="subject"
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              required
+              aria-invalid={Boolean(clientErrors.subject)}
+              className="input"
+              placeholder="e.g. Mathematics"
+            />
+            {clientErrors.subject && (
+              <p className="field-error" role="alert">{clientErrors.subject}</p>
+            )}
+          </div>
+
+          <div className="field">
+            <label htmlFor="currentLevel" className="label">Current level</label>
+            <input
+              id="currentLevel"
+              type="text"
+              value={currentLevel}
+              onChange={(e) => setCurrentLevel(e.target.value)}
+              className="input"
+              placeholder="e.g. Grade 10"
+            />
+          </div>
+
+          <div className="field sm:col-span-2">
+            <label htmlFor="tempPassword" className="label">
+              Temporary password
+            </label>
+            <input
+              id="tempPassword"
+              type="text"
+              value={tempPassword}
+              onChange={(e) => setTempPassword(e.target.value)}
+              aria-invalid={Boolean(clientErrors.tempPassword)}
+              className="input"
+              placeholder="Leave blank to auto-generate"
+              autoComplete="new-password"
+            />
+            {clientErrors.tempPassword ? (
+              <p className="field-error" role="alert">{clientErrors.tempPassword}</p>
+            ) : (
+              <p className="hint">
+                If left blank, a secure password is generated and shown once on the next screen.
+              </p>
+            )}
+          </div>
+
+          <div className="field sm:col-span-2">
+            <label htmlFor="learningGoals" className="label">Learning goals</label>
+            <textarea
+              id="learningGoals"
+              value={learningGoals}
+              onChange={(e) => setLearningGoals(e.target.value)}
+              rows={3}
+              className="input input-textarea"
+              placeholder="What does the student want to achieve?"
+            />
+          </div>
+
+          <div className="field sm:col-span-2">
+            <label htmlFor="weakAreas" className="label">Weak areas</label>
+            <textarea
+              id="weakAreas"
+              value={weakAreas}
+              onChange={(e) => setWeakAreas(e.target.value)}
+              rows={3}
+              className="input input-textarea"
+              placeholder="Topics or skills the student struggles with"
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-foreground">
-            Email <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            placeholder="student@example.com"
-          />
-          <p className="text-xs text-muted">
-            A login account will be created for this email.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="tempPassword" className="text-sm font-medium text-foreground">
-            Temporary Password
-          </label>
-          <input
-            id="tempPassword"
-            type="text"
-            value={tempPassword}
-            onChange={(e) => setTempPassword(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            placeholder="Leave blank to auto-generate"
-          />
-          <p className="text-xs text-muted">
-            If left blank, a random password will be generated.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="subject" className="text-sm font-medium text-foreground">
-            Subject <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="subject"
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            placeholder="e.g. Mathematics"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="currentLevel" className="text-sm font-medium text-foreground">
-            Current Level
-          </label>
-          <input
-            id="currentLevel"
-            type="text"
-            value={currentLevel}
-            onChange={(e) => setCurrentLevel(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            placeholder="e.g. Grade 10"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="learningGoals" className="text-sm font-medium text-foreground">
-            Learning Goals
-          </label>
-          <textarea
-            id="learningGoals"
-            value={learningGoals}
-            onChange={(e) => setLearningGoals(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent resize-none"
-            placeholder="What does the student want to achieve?"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="weakAreas" className="text-sm font-medium text-foreground">
-            Weak Areas
-          </label>
-          <textarea
-            id="weakAreas"
-            value={weakAreas}
-            onChange={(e) => setWeakAreas(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent resize-none"
-            placeholder="Topics or skills the student struggles with"
-          />
-        </div>
-
-        <div className="flex gap-3 mt-2">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Creating..." : "Create Student"}
+        <div className="mt-6 flex flex-wrap items-center gap-2.5 border-t border-border pt-5">
+          <button type="submit" disabled={loading} className="btn btn-primary">
+            {loading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
+                Creating…
+              </>
+            ) : (
+              <>
+                <UserPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                Create student
+              </>
+            )}
           </button>
-          <Link
-            href="/tutor/students"
-            className="px-4 py-2 text-sm font-medium text-muted border border-border rounded-md hover:text-foreground hover:bg-accent-light/50 transition-colors"
-          >
+          <Link href="/tutor/students" className="btn btn-secondary">
             Cancel
           </Link>
         </div>

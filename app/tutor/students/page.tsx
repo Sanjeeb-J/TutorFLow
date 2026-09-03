@@ -1,11 +1,16 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Plus, User } from "lucide-react";
+import { Plus } from "lucide-react";
+import StudentsManager, {
+  type NextSessionInfo,
+  type StudentSummary,
+} from "@/components/StudentsManager";
 
 export default async function StudentsPage() {
   const profile = await getProfile();
   const supabase = await createClient();
+  const now = new Date().toISOString();
 
   const { data: students } = await supabase
     .from("students")
@@ -13,68 +18,47 @@ export default async function StudentsPage() {
     .eq("tutor_id", profile!.id)
     .order("name", { ascending: true });
 
+  // Next upcoming session per student (single pass, real data)
+  const { data: upcoming } = await supabase
+    .from("sessions")
+    .select("id, student_id, topic, start_at, status")
+    .eq("tutor_id", profile!.id)
+    .gte("start_at", now)
+    .in("status", ["scheduled", "in_progress"])
+    .order("start_at", { ascending: true });
+
+  const nextSessions: Record<string, NextSessionInfo> = {};
+  for (const s of upcoming ?? []) {
+    if (!nextSessions[s.student_id]) {
+      nextSessions[s.student_id] = { topic: s.topic, start_at: s.start_at };
+    }
+  }
+
+  const count = students?.length ?? 0;
+
   return (
-    <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
+    <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Students</h1>
-          <p className="text-sm text-muted mt-1">
-            {students?.length ?? 0} student{(students?.length ?? 0) !== 1 ? "s" : ""}
+          <h1 className="page-title">Students</h1>
+          <p className="mt-1 text-sm text-muted">
+            {count === 0
+              ? "Manage the students you tutor"
+              : `${count} student${count === 1 ? "" : "s"} on your roster`}
           </p>
         </div>
-        <Link
-          href="/tutor/students/new"
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" strokeWidth={1.5} />
+        <Link href="/tutor/students/new" className="btn btn-primary self-start sm:self-auto">
+          <Plus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           Add Student
         </Link>
       </div>
 
-      {students && students.length > 0 ? (
-        <div className="space-y-2">
-          {students.map((student) => (
-            <Link
-              key={student.id}
-              href={`/tutor/students/${student.id}`}
-              className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent-light/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-accent-light">
-                  <User className="w-4 h-4 text-accent" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">{student.name}</p>
-                  <p className="text-xs text-muted">{student.subject}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                {student.current_level && (
-                  <p className="text-xs text-muted">{student.current_level}</p>
-                )}
-                {student.email && (
-                  <p className="text-xs text-muted">{student.email}</p>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className="p-8 border border-border rounded-lg text-center">
-          <User className="w-10 h-10 text-muted mx-auto mb-3" strokeWidth={1.5} />
-          <p className="text-sm font-medium text-foreground mb-1">No students yet</p>
-          <p className="text-sm text-muted mb-4">
-            Add your first student to start scheduling sessions.
-          </p>
-          <Link
-            href="/tutor/students/new"
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" strokeWidth={1.5} />
-            Add Student
-          </Link>
-        </div>
-      )}
+      <div className="mt-8">
+        <StudentsManager
+          students={(students ?? []) as StudentSummary[]}
+          nextSessions={nextSessions}
+        />
+      </div>
     </div>
   );
 }

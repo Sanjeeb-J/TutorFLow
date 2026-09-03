@@ -2,7 +2,9 @@ import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarDays, ClipboardList, Clock, FileText, Sparkles } from "lucide-react";
+import StatusBadge from "@/components/StatusBadge";
+import EmptyState from "@/components/EmptyState";
 import HomeworkToggle from "@/components/HomeworkToggle";
 
 export default async function StudentSessionDetailPage({
@@ -39,13 +41,12 @@ export default async function StudentSessionDetailPage({
   const isReviewed = session.status === "ai_reviewed";
   const isCompleted = session.status === "completed" || isReviewed;
 
-  // Fetch AI review if reviewed
   let review = null;
   let homework: Array<{ id: string; description: string; completed: boolean }> = [];
   if (isReviewed) {
     const { data: reviewData } = await supabase
       .from("session_reviews")
-      .select("id, summary, next_topic")
+      .select("id, summary, next_topic, ai_generated_at")
       .eq("session_id", id)
       .single();
     review = reviewData;
@@ -60,96 +61,157 @@ export default async function StudentSessionDetailPage({
     }
   }
 
-  const colors: Record<string, string> = {
-    scheduled: "text-blue-700 bg-blue-50",
-    in_progress: "text-amber-700 bg-amber-50",
-    completed: "text-green-700 bg-green-50",
-    ai_reviewed: "text-purple-700 bg-purple-50",
-  };
+  const pendingCount = homework.filter((h) => !h.completed).length;
 
   return (
-    <div className="max-w-4xl">
+    <div>
       <Link
         href="/student/sessions"
-        className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground mb-4 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         Back to sessions
       </Link>
 
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">{session.topic}</h1>
-          <p className="text-sm text-muted mt-1">{tutor?.full_name}</p>
+      {/* Header */}
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="page-title">{session.topic}</h1>
+          {tutor && <p className="mt-1 text-sm text-muted">with {tutor.full_name}</p>}
         </div>
-        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${colors[session.status] || ""}`}>
-          {session.status.replace("_", " ")}
-        </span>
+        <StatusBadge status={session.status} className="shrink-0 self-start sm:mt-1" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="p-4 border border-border rounded-lg">
-          <p className="text-xs text-muted mb-0.5">Date</p>
-          <p className="text-sm font-medium text-foreground">
-            {startDt.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-          </p>
+      {/* Meta */}
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="card flex items-center gap-3 p-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-light">
+            <CalendarDays className="h-4 w-4 text-accent" strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted">Date</p>
+            <p className="truncate text-sm font-medium text-foreground">
+              {startDt.toLocaleDateString(undefined, {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+          </div>
         </div>
-        <div className="p-4 border border-border rounded-lg">
-          <p className="text-xs text-muted mb-0.5">Time</p>
-          <p className="text-sm font-medium text-foreground">
-            {startDt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-            {" – "}
-            {endDt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-          </p>
+        <div className="card flex items-center gap-3 p-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-light">
+            <Clock className="h-4 w-4 text-accent" strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted">Time</p>
+            <p className="truncate text-sm font-medium text-foreground">
+              {startDt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+              {" – "}
+              {endDt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+            </p>
+          </div>
+        </div>
+        <div className="card flex items-center gap-3 p-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-light">
+            <Sparkles className="h-4 w-4 text-accent" strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted">Review status</p>
+            <p className="truncate text-sm font-medium text-foreground">
+              {isReviewed ? "Available below" : isCompleted ? "Pending" : "After completion"}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Notes */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-foreground mb-3">Session Notes</h2>
+      <section className="mt-8" aria-labelledby="notes-heading">
+        <h2 id="notes-heading" className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
+          <FileText className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
+          Session notes
+        </h2>
         {session.notes ? (
-          <div className="p-4 border border-border rounded-lg">
-            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{session.notes}</p>
+          <div className="card px-5 py-4">
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground">
+              {session.notes}
+            </p>
           </div>
         ) : isCompleted ? (
-          <p className="text-sm text-muted italic">No notes recorded for this session.</p>
+          <EmptyState
+            title="No notes recorded for this session"
+            description="Your tutor didn't leave written notes for this one."
+          />
         ) : (
-          <p className="text-sm text-muted">Notes will be available after the session is completed.</p>
+          <EmptyState
+            title="Notes appear after the session"
+            description="Your tutor's notes will be available here once the session is completed."
+          />
         )}
-      </div>
+      </section>
 
       {/* AI Review */}
       {review ? (
-        <div className="space-y-4 mb-8">
-          <h2 className="text-lg font-semibold text-foreground">Session Review</h2>
-          <div className="p-4 border border-border rounded-lg">
-            <h3 className="text-sm font-medium text-foreground mb-2">Summary</h3>
-            <p className="text-sm text-foreground whitespace-pre-wrap">{review.summary}</p>
-          </div>
-          {homework.length > 0 && (
-            <div className="p-4 border border-border rounded-lg">
-              <h3 className="text-sm font-medium text-foreground mb-2">Homework</h3>
-              <div className="space-y-2">
-                {homework.map((hw) => (
-                  <div key={hw.id} className="flex items-start gap-3">
-                    <HomeworkToggle id={hw.id} completed={hw.completed} />
-                    <p className={`text-sm ${hw.completed ? "text-muted line-through" : "text-foreground"}`}>
-                      {hw.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
+        <section className="mt-8" aria-labelledby="review-heading">
+          <h2 id="review-heading" className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
+            <Sparkles className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
+            Session review
+          </h2>
+          <div className="card divide-y divide-border overflow-hidden">
+            <div className="px-5 py-4">
+              <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted">Summary</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                {review.summary}
+              </p>
             </div>
-          )}
-          <div className="p-4 border border-border rounded-lg">
-            <h3 className="text-sm font-medium text-foreground mb-2">Next Session</h3>
-            <p className="text-sm text-foreground">{review.next_topic}</p>
+            {homework.length > 0 && (
+              <div className="px-5 py-4">
+                <p className="mb-1 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
+                  <ClipboardList className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  Homework
+                  {pendingCount > 0 ? ` · ${pendingCount} to do` : " · all done"}
+                </p>
+                <ul className="mt-3 space-y-2.5">
+                  {homework.map((hw) => (
+                    <li key={hw.id} className="flex items-start gap-3">
+                      <HomeworkToggle id={hw.id} description={hw.description} completed={hw.completed} />
+                      <p
+                        className={`text-sm leading-relaxed ${
+                          hw.completed ? "text-muted line-through" : "text-foreground"
+                        }`}
+                      >
+                        {hw.description}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {review.next_topic && (
+              <div className="px-5 py-4">
+                <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted">
+                  Recommended next topic
+                </p>
+                <div className="flex items-start gap-2.5 rounded-lg border border-ai-light bg-ai-light/50 px-3.5 py-3">
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-ai" strokeWidth={1.75} aria-hidden="true" />
+                  <p className="text-sm leading-relaxed text-foreground">{review.next_topic}</p>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </section>
       ) : isCompleted ? (
-        <div className="p-4 border border-dashed border-border rounded-lg">
-          <p className="text-sm text-muted">AI review will be available after processing.</p>
-        </div>
+        <section className="mt-8" aria-labelledby="review-heading">
+          <h2 id="review-heading" className="mb-3 text-base font-semibold text-foreground">
+            Session review
+          </h2>
+          <EmptyState
+            icon={Sparkles}
+            title="Review not available yet"
+            description="Your tutor generates the AI review after the session. Check back soon."
+          />
+        </section>
       ) : null}
     </div>
   );

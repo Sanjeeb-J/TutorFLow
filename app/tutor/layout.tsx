@@ -1,5 +1,5 @@
 import { requireTutor } from "@/lib/supabase/auth";
-import TutorNav from "@/components/TutorNav";
+import AppNav from "@/components/AppNav";
 
 export default async function TutorLayout({
   children,
@@ -9,11 +9,13 @@ export default async function TutorLayout({
   const profile = await requireTutor();
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <TutorNav profile={profile} />
-      <main className="flex-1 flex flex-col ml-0 md:ml-56">
-        <div className="flex-1 p-6 md:p-8">{children}</div>
-      </main>
+    <div className="min-h-screen bg-background">
+      <AppNav role="tutor" profile={profile} />
+      <div className="lg:pl-64">
+        <main className="px-4 pb-14 pt-20 sm:px-6 lg:px-8 lg:pb-16 lg:pt-10">
+          <div className="mx-auto w-full max-w-5xl">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

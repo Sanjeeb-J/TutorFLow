@@ -1,6 +1,10 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
+import { CalendarDays, CheckCircle2 } from "lucide-react";
+import SessionRow from "@/components/SessionRow";
+import EmptyState from "@/components/EmptyState";
+
+type TutorInfo = { full_name: string }[] | null;
 
 export default async function StudentSessionsPage() {
   const profile = await getProfile();
@@ -13,86 +17,108 @@ export default async function StudentSessionsPage() {
     .eq("user_id", profile!.id)
     .single();
 
+  const studentId = student?.id ?? "";
+
   const { data: upcoming } = await supabase
     .from("sessions")
     .select("id, topic, start_at, end_at, status, tutor:profiles!sessions_tutor_id_fkey(full_name)")
-    .eq("student_id", student?.id || "")
+    .eq("student_id", studentId)
     .gte("start_at", now)
     .order("start_at", { ascending: true });
 
   const { data: past } = await supabase
     .from("sessions")
-    .select("id, topic, start_at, status, tutor:profiles!sessions_tutor_id_fkey(full_name)")
-    .eq("student_id", student?.id || "")
+    .select("id, topic, start_at, end_at, status, tutor:profiles!sessions_tutor_id_fkey(full_name)")
+    .eq("student_id", studentId)
     .lt("start_at", now)
     .order("start_at", { ascending: false })
     .limit(20);
 
-  function renderList(sessions: { id: string; topic: string; start_at: string; status: string; tutor: { full_name: string }[] | null }[] | null) {
-    if (!sessions || sessions.length === 0) return null;
-    return (
-      <div className="space-y-2">
-        {sessions.map((s) => {
-          const dt = new Date(s.start_at);
-          const tutor = s.tutor?.[0];
-          return (
-            <Link
-              key={s.id}
-              href={`/student/sessions/${s.id}`}
-              className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent-light/30 transition-colors"
-            >
-              <div>
-                <p className="text-sm font-medium text-foreground">{s.topic}</p>
-                <p className="text-xs text-muted mt-0.5">{tutor?.full_name}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColor(s.status)}`}>
-                  {s.status.replace("_", " ")}
-                </span>
-                <p className="text-xs text-muted">
-                  {dt.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-                  {" "}
-                  {dt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-                </p>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    );
-  }
+  const upcomingCount = upcoming?.length ?? 0;
+  const pastCount = past?.length ?? 0;
 
   return (
-    <div className="max-w-4xl">
-      <h1 className="text-2xl font-semibold text-foreground mb-6">Sessions</h1>
-
-      <div className="mb-8">
-        <h2 className="text-sm font-medium text-muted uppercase tracking-wide mb-3">
-          Upcoming ({upcoming?.length ?? 0})
-        </h2>
-        {renderList(upcoming) || (
-          <p className="text-sm text-muted py-4">No upcoming sessions.</p>
-        )}
-      </div>
-
+    <div>
       <div>
-        <h2 className="text-sm font-medium text-muted uppercase tracking-wide mb-3">
-          Past ({past?.length ?? 0})
-        </h2>
-        {renderList(past) || (
-          <p className="text-sm text-muted py-4">No past sessions yet.</p>
-        )}
+        <h1 className="page-title">Sessions</h1>
+        <p className="mt-1 text-sm text-muted">
+          {upcomingCount + pastCount === 0
+            ? "Your tutoring sessions"
+            : `${upcomingCount} upcoming · ${pastCount} past`}
+        </p>
       </div>
+
+      <section className="mt-8" aria-labelledby="upcoming-heading">
+        <div className="mb-3 flex items-center gap-2.5">
+          <h2 id="upcoming-heading" className="text-sm font-semibold text-foreground">
+            Upcoming
+          </h2>
+          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
+            {upcomingCount}
+          </span>
+        </div>
+        {upcoming && upcoming.length > 0 ? (
+          <div className="space-y-2.5">
+            {upcoming.map((s) => {
+              const tutor = s.tutor as TutorInfo;
+              return (
+                <SessionRow
+                  key={s.id}
+                  id={s.id}
+                  topic={s.topic}
+                  subtitle={tutor?.[0]?.full_name ? `with ${tutor[0].full_name}` : null}
+                  startAt={s.start_at}
+                  endAt={s.end_at}
+                  status={s.status}
+                  href={`/student/sessions/${s.id}`}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            icon={CalendarDays}
+            title="No upcoming sessions"
+            description="Your tutor will share new session times with you here."
+          />
+        )}
+      </section>
+
+      <section className="mt-10" aria-labelledby="past-heading">
+        <div className="mb-3 flex items-center gap-2.5">
+          <h2 id="past-heading" className="text-sm font-semibold text-foreground">
+            Past
+          </h2>
+          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
+            {pastCount}
+          </span>
+        </div>
+        {past && past.length > 0 ? (
+          <div className="space-y-2.5">
+            {past.map((s) => {
+              const tutor = s.tutor as TutorInfo;
+              return (
+                <SessionRow
+                  key={s.id}
+                  id={s.id}
+                  topic={s.topic}
+                  subtitle={tutor?.[0]?.full_name ? `with ${tutor[0].full_name}` : null}
+                  startAt={s.start_at}
+                  endAt={s.end_at}
+                  status={s.status}
+                  href={`/student/sessions/${s.id}`}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            icon={CheckCircle2}
+            title="No past sessions yet"
+            description="Completed sessions will appear here with their notes and AI reviews."
+          />
+        )}
+      </section>
     </div>
   );
-}
-
-function statusColor(status: string) {
-  switch (status) {
-    case "scheduled": return "text-blue-700 bg-blue-50";
-    case "in_progress": return "text-amber-700 bg-amber-50";
-    case "completed": return "text-green-700 bg-green-50";
-    case "ai_reviewed": return "text-purple-700 bg-purple-50";
-    default: return "text-muted bg-gray-50";
-  }
 }

@@ -1,121 +1,142 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { CalendarDays, CheckCircle2, CalendarPlus } from "lucide-react";
+import SessionRow from "@/components/SessionRow";
+import EmptyState from "@/components/EmptyState";
+
+type SessionLike = {
+  id: string;
+  topic: string;
+  start_at: string;
+  end_at?: string | null;
+  status: string;
+  students?: unknown;
+};
+
+function studentNameOf(session: SessionLike): string | null {
+  if (!session.students) return null;
+  if (Array.isArray(session.students)) {
+    return (session.students[0] as { name?: string } | undefined)?.name ?? null;
+  }
+  return (session.students as { name?: string })?.name ?? null;
+}
 
 export default async function SessionsPage() {
   const profile = await getProfile();
   const supabase = await createClient();
   const now = new Date().toISOString();
 
+  const selectFields = "id, topic, start_at, end_at, status, students(name)";
+
   const { data: upcoming } = await supabase
     .from("sessions")
-    .select("id, topic, start_at, end_at, status, students(name)")
+    .select(selectFields)
     .eq("tutor_id", profile!.id)
     .gte("start_at", now)
     .order("start_at", { ascending: true });
 
   const { data: past } = await supabase
     .from("sessions")
-    .select("id, topic, start_at, end_at, status, students(name)")
+    .select(selectFields)
     .eq("tutor_id", profile!.id)
     .lt("start_at", now)
     .order("start_at", { ascending: false })
     .limit(20);
 
-  function formatDateTime(iso: string) {
-    const d = new Date(iso);
-    return {
-      date: d.toLocaleDateString(undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }),
-      time: d.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-  }
-
-  function statusColor(status: string) {
-    switch (status) {
-      case "scheduled": return "text-blue-700 bg-blue-50";
-      case "in_progress": return "text-amber-700 bg-amber-50";
-      case "completed": return "text-green-700 bg-green-50";
-      case "ai_reviewed": return "text-purple-700 bg-purple-50";
-      default: return "text-muted bg-gray-50";
-    }
-  }
-
-  function renderSessionList(sessions: typeof upcoming) {
-    if (!sessions || sessions.length === 0) return null;
-    return (
-      <div className="space-y-2">
-        {sessions.map((s) => {
-          const dt = formatDateTime(s.start_at);
-          return (
-            <Link
-              key={s.id}
-              href={`/tutor/sessions/${s.id}`}
-              className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent-light/30 transition-colors"
-            >
-              <div>
-                <p className="text-sm font-medium text-foreground">{s.topic}</p>
-                <p className="text-xs text-muted mt-0.5">
-                  {Array.isArray(s.students) ? s.students[0]?.name : (s.students as { name: string })?.name}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColor(s.status)}`}>
-                  {s.status.replace("_", " ")}
-                </span>
-                <div className="text-right text-xs text-muted">
-                  <p>{dt.date}</p>
-                  <p>{dt.time}</p>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    );
-  }
+  const upcomingCount = upcoming?.length ?? 0;
+  const pastCount = past?.length ?? 0;
 
   return (
-    <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
+    <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Sessions</h1>
+          <h1 className="page-title">Sessions</h1>
+          <p className="mt-1 text-sm text-muted">
+            {upcomingCount + pastCount === 0
+              ? "Plan, run, and review your tutoring sessions"
+              : `${upcomingCount} upcoming · ${pastCount} past`}
+          </p>
         </div>
-        <Link
-          href="/tutor/sessions/new"
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" strokeWidth={1.5} />
-          New Session
+        <Link href="/tutor/sessions/new" className="btn btn-primary self-start sm:self-auto">
+          <CalendarPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+          Schedule session
         </Link>
       </div>
 
       {/* Upcoming */}
-      <div className="mb-8">
-        <h2 className="text-sm font-medium text-muted uppercase tracking-wide mb-3">
-          Upcoming ({upcoming?.length ?? 0})
-        </h2>
-        {renderSessionList(upcoming) || (
-          <p className="text-sm text-muted py-4">No upcoming sessions.</p>
+      <section className="mt-8" aria-labelledby="upcoming-heading">
+        <div className="mb-3 flex items-center gap-2.5">
+          <h2 id="upcoming-heading" className="text-sm font-semibold text-foreground">
+            Upcoming
+          </h2>
+          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
+            {upcomingCount}
+          </span>
+        </div>
+        {upcoming && upcoming.length > 0 ? (
+          <div className="space-y-2.5">
+            {upcoming.map((s) => (
+              <SessionRow
+                key={s.id}
+                id={s.id}
+                topic={s.topic}
+                subtitle={studentNameOf(s)}
+                startAt={s.start_at}
+                endAt={s.end_at}
+                status={s.status}
+                href={`/tutor/sessions/${s.id}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={CalendarDays}
+            title="No upcoming sessions"
+            description="When you schedule a session it will appear here."
+            action={
+              <Link href="/tutor/sessions/new" className="btn btn-primary">
+                <CalendarPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                Schedule a session
+              </Link>
+            }
+          />
         )}
-      </div>
+      </section>
 
       {/* Past */}
-      <div>
-        <h2 className="text-sm font-medium text-muted uppercase tracking-wide mb-3">
-          Past ({past?.length ?? 0})
-        </h2>
-        {renderSessionList(past) || (
-          <p className="text-sm text-muted py-4">No past sessions yet.</p>
+      <section className="mt-10" aria-labelledby="past-heading">
+        <div className="mb-3 flex items-center gap-2.5">
+          <h2 id="past-heading" className="text-sm font-semibold text-foreground">
+            Past
+          </h2>
+          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
+            {pastCount}
+          </span>
+        </div>
+        {past && past.length > 0 ? (
+          <div className="space-y-2.5">
+            {past.map((s) => (
+              <SessionRow
+                key={s.id}
+                id={s.id}
+                topic={s.topic}
+                subtitle={studentNameOf(s)}
+                startAt={s.start_at}
+                endAt={s.end_at}
+                status={s.status}
+                href={`/tutor/sessions/${s.id}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={CheckCircle2}
+            title="No past sessions yet"
+            description="Completed sessions will appear here with their status and AI reviews."
+          />
         )}
-      </div>
+      </section>
     </div>
   );
 }

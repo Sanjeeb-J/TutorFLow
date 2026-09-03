@@ -1,143 +1,254 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Calendar, BookOpen } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+} from "lucide-react";
+import StatusBadge from "@/components/StatusBadge";
+import SessionRow from "@/components/SessionRow";
+import EmptyState from "@/components/EmptyState";
+import HomeworkToggle from "@/components/HomeworkToggle";
+
+interface HomeworkRow {
+  id: string;
+  description: string;
+  completed: boolean;
+  created_at: string;
+  review: { session_id: string } | { session_id: string }[] | null;
+}
+
+function reviewSessionId(row: HomeworkRow): string | null {
+  const r = row.review;
+  if (!r) return null;
+  if (Array.isArray(r)) return r[0]?.session_id ?? null;
+  return r.session_id ?? null;
+}
 
 export default async function StudentDashboard() {
   const profile = await getProfile();
   const supabase = await createClient();
   const now = new Date().toISOString();
 
-  // Get student record
   const { data: student } = await supabase
     .from("students")
     .select("id, name, subject, current_level")
     .eq("user_id", profile!.id)
     .single();
 
-  // Get upcoming sessions
-  const { data: upcoming } = await supabase
+  const studentId = student?.id ?? "";
+
+  const { data: nextSessions } = await supabase
     .from("sessions")
     .select("id, topic, start_at, end_at, status, tutor:profiles!sessions_tutor_id_fkey(full_name)")
-    .eq("student_id", student?.id || "")
+    .eq("student_id", studentId)
     .gte("start_at", now)
     .in("status", ["scheduled", "in_progress"])
     .order("start_at", { ascending: true })
-    .limit(5);
+    .limit(1);
 
-  // Get recent sessions
   const { data: recent } = await supabase
     .from("sessions")
-    .select("id, topic, start_at, status, tutor:profiles!sessions_tutor_id_fkey(full_name)")
-    .eq("student_id", student?.id || "")
+    .select("id, topic, start_at, end_at, status, tutor:profiles!sessions_tutor_id_fkey(full_name)")
+    .eq("student_id", studentId)
     .lt("start_at", now)
     .order("start_at", { ascending: false })
     .limit(5);
 
+  const { data: homework } = await supabase
+    .from("homework_items")
+    .select("id, description, completed, created_at, review:session_reviews(id, session_id)")
+    .eq("completed", false)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  const pendingCount = (
+    await supabase
+      .from("homework_items")
+      .select("id", { count: "exact", head: true })
+      .eq("completed", false)
+  ).count;
+
+  // Map review session ids to topics the student can see
+  const sessionIds = Array.from(
+    new Set((homework ?? []).map(reviewSessionId).filter(Boolean) as string[]),
+  );
+  const topicBySession: Record<string, string> = {};
+  if (sessionIds.length > 0) {
+    const { data: sessions } = await supabase
+      .from("sessions")
+      .select("id, topic")
+      .eq("student_id", studentId)
+      .in("id", sessionIds);
+    for (const s of sessions ?? []) topicBySession[s.id] = s.topic;
+  }
+
+  const next = nextSessions?.[0];
+  const tutorArr = next?.tutor as { full_name: string }[] | null;
+  const nextTutor = tutorArr?.[0]?.full_name;
+
   return (
-    <div className="max-w-4xl">
-      <h1 className="text-2xl font-semibold text-foreground mb-1">
-        Welcome, {profile?.full_name}
-      </h1>
-      <p className="text-sm text-muted mb-8">
-        {student?.subject}{student?.current_level ? ` · ${student.current_level}` : ""}
+    <div className="mx-auto max-w-3xl">
+      <h1 className="page-title">Welcome back, {profile?.full_name?.split(/\s+/)[0]}</h1>
+      <p className="mt-1 text-sm text-muted">
+        {student?.subject ?? "Tutoring"}
+        {student?.current_level ? ` · ${student.current_level}` : ""}
       </p>
 
-      {/* Upcoming Sessions */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Upcoming Sessions</h2>
-          <Link href="/student/sessions" className="text-sm text-accent hover:text-accent/80">
+      {/* Next session */}
+      <section className="mt-8" aria-labelledby="next-heading">
+        <h2 id="next-heading" className="section-kicker mb-3">Next session</h2>
+        {next ? (
+          <div className="card flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex flex-col items-center rounded-lg border border-border bg-surface-muted px-3.5 py-2.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                  {new Date(next.start_at).toLocaleDateString(undefined, { month: "short" })}
+                </span>
+                <span className="text-xl font-semibold text-foreground">
+                  {new Date(next.start_at).toLocaleDateString(undefined, { day: "numeric" })}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">{next.topic}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {new Date(next.start_at).toLocaleDateString(undefined, {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                  {" · "}
+                  {new Date(next.start_at).toLocaleTimeString(undefined, {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                  {next.end_at
+                    ? ` – ${new Date(next.end_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`
+                    : ""}
+                </p>
+                {nextTutor && <p className="mt-1 text-sm text-muted">with {nextTutor}</p>}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <StatusBadge status={next.status} />
+              <Link
+                href={`/student/sessions/${next.id}`}
+                className="btn btn-primary"
+              >
+                View session
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <EmptyState
+            icon={CalendarDays}
+            title="No upcoming sessions"
+            description="When your tutor schedules a session it will appear here."
+          />
+        )}
+      </section>
+
+      {/* Homework */}
+      <section className="mt-10" aria-labelledby="homework-heading">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 id="homework-heading" className="section-kicker">
+            Homework
+            {pendingCount && pendingCount > 0 ? ` · ${pendingCount} pending` : ""}
+          </h2>
+          <Link
+            href="/student/homework"
+            className="flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent-strong"
+          >
             View all
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           </Link>
         </div>
 
-        {upcoming && upcoming.length > 0 ? (
-          <div className="space-y-2">
-            {upcoming.map((s) => {
-              const dt = new Date(s.start_at);
-              const tutorArr = s.tutor as { full_name: string }[] | null;
-              const tutor = tutorArr?.[0];
+        {homework && homework.length > 0 ? (
+          <div className="card divide-y divide-border overflow-hidden">
+            {homework.map((hw) => {
+              const sid = reviewSessionId(hw);
+              const topic = sid ? topicBySession[sid] : undefined;
               return (
-                <Link
-                  key={s.id}
-                  href={`/student/sessions/${s.id}`}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent-light/30 transition-colors"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{s.topic}</p>
-                    <p className="text-xs text-muted mt-0.5">{tutor?.full_name}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-foreground">
-                      {dt.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                    </p>
-                    <p className="text-xs text-muted">
-                      {dt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                <div key={hw.id} className="flex items-start gap-3.5 px-4 py-3.5">
+                  <HomeworkToggle id={hw.id} description={hw.description} completed={hw.completed} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-foreground">{hw.description}</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {topic ? `From ${topic} · ` : ""}
+                      Assigned{" "}
+                      {new Date(hw.created_at).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </p>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
         ) : (
-          <div className="p-6 border border-border rounded-lg text-center">
-            <Calendar className="w-8 h-8 text-muted mx-auto mb-2" strokeWidth={1.5} />
-            <p className="text-sm text-muted">No upcoming sessions</p>
-          </div>
+          <EmptyState
+            icon={ClipboardList}
+            title="Nothing pending"
+            description="Homework from reviewed sessions will show up here."
+          />
         )}
-      </div>
+      </section>
 
-      {/* Recent Sessions */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Recent Sessions</h2>
+      {/* Recent sessions */}
+      <section className="mt-10" aria-labelledby="recent-heading">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 id="recent-heading" className="section-kicker">Recent sessions</h2>
+          <Link
+            href="/student/sessions"
+            className="flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent-strong"
+          >
+            View all
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+          </Link>
+        </div>
+
         {recent && recent.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {recent.map((s) => {
-              const dt = new Date(s.start_at);
-              const tutorArr = s.tutor as { full_name: string }[] | null;
-              const tutor = tutorArr?.[0];
+              const arr = s.tutor as { full_name: string }[] | null;
               return (
-                <Link
+                <SessionRow
                   key={s.id}
+                  id={s.id}
+                  topic={s.topic}
+                  subtitle={arr?.[0]?.full_name ? `with ${arr[0].full_name}` : null}
+                  startAt={s.start_at}
+                  endAt={s.end_at}
+                  status={s.status}
                   href={`/student/sessions/${s.id}`}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent-light/30 transition-colors"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{s.topic}</p>
-                    <p className="text-xs text-muted mt-0.5">{tutor?.full_name}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <StatusBadge status={s.status} />
-                    <p className="text-xs text-muted">
-                      {dt.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                    </p>
-                  </div>
-                </Link>
+                />
               );
             })}
           </div>
         ) : (
-          <div className="p-6 border border-border rounded-lg text-center">
-            <BookOpen className="w-8 h-8 text-muted mx-auto mb-2" strokeWidth={1.5} />
-            <p className="text-sm text-muted">No past sessions yet</p>
-          </div>
+          <EmptyState
+            icon={BookOpen}
+            title="No past sessions yet"
+            description="Your session history will appear here after your first session."
+          />
         )}
+      </section>
+
+      {/* Reference to progress page */}
+      <div className="mt-10 text-center">
+        <Link
+          href="/student/progress"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-strong transition-colors hover:text-foreground"
+        >
+          <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+          See your learning history & progress
+        </Link>
       </div>
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    scheduled: "text-blue-700 bg-blue-50",
-    in_progress: "text-amber-700 bg-amber-50",
-    completed: "text-green-700 bg-green-50",
-    ai_reviewed: "text-purple-700 bg-purple-50",
-  };
-  return (
-    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colors[status] || ""}`}>
-      {status.replace("_", " ")}
-    </span>
   );
 }

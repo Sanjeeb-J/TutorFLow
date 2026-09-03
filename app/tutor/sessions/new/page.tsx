@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, CalendarPlus, Loader2, UserPlus } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface Student {
   id: string;
   name: string;
   subject: string;
+  current_level: string | null;
 }
 
 export default function NewSessionPage() {
@@ -27,10 +29,13 @@ export default function NewSessionPage() {
 
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/tutor/students");
-      const data = await res.json();
-      setStudents(data.students || []);
-      setLoading(false);
+      try {
+        const res = await fetch("/api/tutor/students");
+        const data = await res.json();
+        setStudents(data.students || []);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -38,10 +43,16 @@ export default function NewSessionPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSubmitting(true);
 
-    const startAt = new Date(`${startDate}T${startTime}`).toISOString();
-    const endAt = new Date(`${endDate}T${endTime}`).toISOString();
+    const startAt = new Date(`${startDate}T${startTime}`);
+    const endAt = new Date(`${endDate}T${endTime}`);
+
+    if (!(endAt > startAt)) {
+      setError("End time must be after the start time.");
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
       const res = await fetch("/api/tutor/sessions", {
@@ -50,8 +61,8 @@ export default function NewSessionPage() {
         body: JSON.stringify({
           student_id: studentId,
           topic,
-          start_at: startAt,
-          end_at: endAt,
+          start_at: startAt.toISOString(),
+          end_at: endAt.toISOString(),
         }),
       });
 
@@ -72,148 +83,173 @@ export default function NewSessionPage() {
 
   if (loading) {
     return (
-      <div className="max-w-lg">
-        <p className="text-sm text-muted">Loading...</p>
+      <div className="mx-auto max-w-2xl">
+        <p className="flex items-center gap-2 text-sm text-muted">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          Loading students…
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg">
+    <div className="mx-auto max-w-2xl">
       <Link
         href="/tutor/sessions"
-        className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground mb-4 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         Back to sessions
       </Link>
 
-      <h1 className="text-2xl font-semibold text-foreground mb-6">Schedule Session</h1>
+      <div className="mt-4">
+        <h1 className="page-title">Schedule session</h1>
+        <p className="mt-1 text-sm text-muted">
+          Sessions with overlapping times are blocked automatically.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {error && (
-          <div className="px-3 py-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md">
-            {error}
-          </div>
-        )}
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="student" className="text-sm font-medium text-foreground">
-            Student <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="student"
-            value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-          >
-            <option value="">Select a student</option>
-            {students.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} — {s.subject}
-              </option>
-            ))}
-          </select>
-          {students.length === 0 && (
-            <p className="text-xs text-muted">
-              No students yet.{" "}
-              <Link href="/tutor/students/new" className="text-accent hover:underline">
-                Add one first
+      {students.length === 0 ? (
+        <div className="mt-6">
+          <EmptyState
+            icon={UserPlus}
+            title="You need a student first"
+            description="Add a student to your roster before scheduling a session."
+            action={
+              <Link href="/tutor/students/new" className="btn btn-primary">
+                <UserPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                Add your first student
               </Link>
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="topic" className="text-sm font-medium text-foreground">
-            Topic <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="topic"
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            placeholder="e.g. Quadratic equations review"
+            }
           />
         </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="card mt-6 p-6">
+          {error && (
+            <div className="alert alert-error mb-5" role="alert">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+          )}
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="startDate" className="text-sm font-medium text-foreground">
-              Start Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="startDate"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="startTime" className="text-sm font-medium text-foreground">
-              Start Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="startTime"
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              required
-              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            />
-          </div>
-        </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="field sm:col-span-2">
+              <label htmlFor="student" className="label">
+                Student <span className="text-danger">*</span>
+              </label>
+              <select
+                id="student"
+                value={studentId}
+                onChange={(e) => setStudentId(e.target.value)}
+                required
+                className="input"
+              >
+                <option value="">Select a student</option>
+                {students.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} — {s.subject}
+                    {s.current_level ? ` (${s.current_level})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="endDate" className="text-sm font-medium text-foreground">
-              End Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="endDate"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required
-              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="endTime" className="text-sm font-medium text-foreground">
-              End Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="endTime"
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              required
-              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-            />
-          </div>
-        </div>
+            <div className="field sm:col-span-2">
+              <label htmlFor="topic" className="label">
+                Topic <span className="text-danger">*</span>
+              </label>
+              <input
+                id="topic"
+                type="text"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                required
+                className="input"
+                placeholder="e.g. Quadratic equations review"
+              />
+            </div>
 
-        <div className="flex gap-3 mt-2">
-          <button
-            type="submit"
-            disabled={submitting || students.length === 0}
-            className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {submitting ? "Scheduling..." : "Schedule Session"}
-          </button>
-          <Link
-            href="/tutor/sessions"
-            className="px-4 py-2 text-sm font-medium text-muted border border-border rounded-md hover:text-foreground hover:bg-accent-light/50 transition-colors"
-          >
-            Cancel
-          </Link>
-        </div>
-      </form>
+            <fieldset className="sm:col-span-2">
+              <legend className="mb-3 text-sm font-medium text-foreground">
+                Start
+              </legend>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="field">
+                  <label htmlFor="startDate" className="label">Date <span className="text-danger">*</span></label>
+                  <input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                    className="input"
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="startTime" className="label">Time <span className="text-danger">*</span></label>
+                  <input
+                    id="startTime"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    required
+                    className="input"
+                  />
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset className="sm:col-span-2">
+              <legend className="mb-3 text-sm font-medium text-foreground">
+                End
+              </legend>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="field">
+                  <label htmlFor="endDate" className="label">Date <span className="text-danger">*</span></label>
+                  <input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    required
+                    className="input"
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="endTime" className="label">Time <span className="text-danger">*</span></label>
+                  <input
+                    id="endTime"
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    required
+                    className="input"
+                  />
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-2.5 border-t border-border pt-5">
+            <button type="submit" disabled={submitting} className="btn btn-primary">
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  Scheduling…
+                </>
+              ) : (
+                <>
+                  <CalendarPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                  Schedule session
+                </>
+              )}
+            </button>
+            <Link href="/tutor/sessions" className="btn btn-secondary">
+              Cancel
+            </Link>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

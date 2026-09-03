@@ -1,21 +1,86 @@
 @import "tailwindcss";
 
+/* ============================================================
+   TutorFlow — Modern Academic Workspace
+   Centralized design tokens.
+   All component styling flows from these values; avoid hardcoding
+   colors in page components.
+   ============================================================ */
+
 :root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
-  --muted: #78716c;
-  --border: #e7e5e4;
-  --accent: #2563eb;
-  --accent-light: #eff6ff;
+  /* Surfaces */
+  --background: #f8fafc; /* cool off-white page background */
+  --surface: #ffffff; /* cards, panels, inputs */
+  --surface-muted: #f1f5f9; /* subtle fill areas */
+
+  /* Text */
+  --foreground: #0f172a; /* charcoal */
+  --muted: #64748b; /* secondary text */
+  --muted-strong: #475569;
+
+  /* Lines */
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* Primary — deep indigo/blue */
+  --accent: #4f46e5;
+  --accent-strong: #4338ca;
+  --accent-light: #eef2ff; /* tinted fill (indigo-50) */
+  --accent-ring: #a5b4fc;
+
+  /* Semantic — status colors */
+  --success: #16a34a;
+  --success-strong: #15803d;
+  --success-light: #f0fdf4;
+
+  --info: #2563eb; /* active / in progress */
+  --info-strong: #1d4ed8;
+  --info-light: #eff6ff;
+
+  --warning: #d97706; /* scheduled / warning */
+  --warning-strong: #b45309;
+  --warning-light: #fffbeb;
+
+  --danger: #dc2626;
+  --danger-strong: #b91c1c;
+  --danger-light: #fef2f2;
+
+  --ai: #7c3aed; /* AI-generated content */
+  --ai-strong: #6d28d9;
+  --ai-light: #f5f3ff;
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.04);
+  --shadow-card-hover: 0 1px 2px 0 rgb(15 23 42 / 0.05), 0 4px 12px -2px rgb(15 23 42 / 0.08);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
   --color-accent-light: var(--accent-light);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-success-light: var(--success-light);
+  --color-info: var(--info);
+  --color-info-strong: var(--info-strong);
+  --color-info-light: var(--info-light);
+  --color-warning: var(--warning);
+  --color-warning-strong: var(--warning-strong);
+  --color-warning-light: var(--warning-light);
+  --color-danger: var(--danger);
+  --color-danger-strong: var(--danger-strong);
+  --color-danger-light: var(--danger-light);
+  --color-ai: var(--ai);
+  --color-ai-strong: var(--ai-strong);
+  --color-ai-light: var(--ai-light);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -24,4 +89,187 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-light);
+  color: var(--foreground);
+}
+
+/* Consistent, visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Component primitives (layered under utilities so pages can
+   still override with Tailwind classes when needed)
+   ============================================================ */
+@layer components {
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+      color 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-strong);
+  }
+  .btn-secondary {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--surface-muted);
+  }
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: var(--danger-strong);
+  }
+  .btn-success {
+    background: var(--success);
+    color: #fff;
+  }
+  .btn-success:hover:not(:disabled) {
+    background: var(--success-strong);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted-strong);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--surface-muted);
+    color: var(--foreground);
+  }
+  .btn-lg {
+    padding: 0.625rem 1.125rem;
+    font-size: 0.9375rem;
+  }
+
+  /* Form fields */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+  .label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+  .input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--surface);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--foreground);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input::placeholder {
+    color: var(--muted);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  .input:disabled {
+    background: var(--surface-muted);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+  .input-textarea {
+    resize: vertical;
+    min-height: 5rem;
+    line-height: 1.6;
+  }
+  .hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .field-error {
+    font-size: 0.8125rem;
+    color: var(--danger-strong);
+  }
+
+  /* Cards & panels */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-card);
+  }
+  .card-hover {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+  .card-hover:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Informational alert banners */
+  .alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+  .alert-error {
+    border-color: #fecaca;
+    background: var(--danger-light);
+    color: var(--danger-strong);
+  }
+  .alert-success {
+    border-color: #bbf7d0;
+    background: var(--success-light);
+    color: var(--success-strong);
+  }
+
+  /* Page typography helpers */
+  .page-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--foreground);
+  }
+  .section-kicker {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
 }

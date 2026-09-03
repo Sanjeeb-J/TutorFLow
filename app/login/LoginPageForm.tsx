@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen } from "lucide-react";
+import { AlertCircle, BookOpen, Loader2 } from "lucide-react";
 
 export default function LoginPageForm() {
   const router = useRouter();
@@ -44,67 +44,75 @@ export default function LoginPageForm() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent-light mb-4">
-            <BookOpen className="w-5 h-5 text-accent" strokeWidth={1.5} />
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-light">
+            <BookOpen className="h-6 w-6 text-accent" strokeWidth={2} aria-hidden="true" />
+          </span>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
             TutorFlow
           </h1>
-          <p className="mt-1 text-sm text-muted">
-            Sign in to your workspace
-          </p>
+          <p className="mt-1 text-sm text-muted">A focused workspace for one-to-one tutoring</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {error && (
-            <div className="px-3 py-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md">
-              {error}
+        <div className="card p-6">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            {error && (
+              <div className="alert alert-error" role="alert">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="field">
+              <label htmlFor="email" className="label">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className="input"
+                placeholder="you@example.com"
+              />
             </div>
-          )}
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-sm font-medium text-foreground">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-              placeholder="you@example.com"
-            />
-          </div>
+            <div className="field">
+              <label htmlFor="password" className="label">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="input"
+                placeholder="Enter your password"
+              />
+            </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-medium text-foreground">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-              placeholder="Enter your password"
-            />
-          </div>
+            <button type="submit" disabled={loading} className="btn btn-primary w-full">
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  Signing in…
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </button>
+          </form>
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-2 px-4 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+        <p className="mt-6 text-center text-xs text-muted">
+          Tutors and students sign in to their own workspace.
+        </p>
       </div>
     </div>
   );

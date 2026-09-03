@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2, Pencil } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface Student {
   id: string;
@@ -23,6 +24,7 @@ export default function EditStudentPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
   const [student, setStudent] = useState<Student | null>(null);
 
   const [name, setName] = useState("");
@@ -38,7 +40,7 @@ export default function EditStudentPage() {
       const data = await res.json();
       const found = data.students?.find((s: Student) => s.id === id);
       if (!found) {
-        setError("Student not found.");
+        setNotFound(true);
         setLoading(false);
         return;
       }
@@ -90,126 +92,123 @@ export default function EditStudentPage() {
 
   if (loading) {
     return (
-      <div className="max-w-lg">
-        <p className="text-sm text-muted">Loading...</p>
+      <div className="mx-auto max-w-2xl">
+        <p className="flex items-center gap-2 text-sm text-muted">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          Loading student profile…
+        </p>
       </div>
     );
   }
 
-  if (!student) {
+  if (notFound || !student) {
     return (
-      <div className="max-w-lg">
-        <p className="text-sm text-muted">{error || "Student not found."}</p>
-        <Link href="/tutor/students" className="text-sm text-accent mt-2 inline-block">
+      <div className="mx-auto max-w-2xl">
+        <Link
+          href="/tutor/students"
+          className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           Back to students
         </Link>
+        <div className="mt-6">
+          <EmptyState
+            title="Student not found"
+            description="This student may have been removed, or the link is out of date."
+            action={
+              <Link href="/tutor/students" className="btn btn-secondary">
+                Back to students
+              </Link>
+            }
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg">
+    <div className="mx-auto max-w-2xl">
       <Link
         href={`/tutor/students/${id}`}
-        className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground mb-4 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
-        Back to student
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+        Back to {student.name}
       </Link>
 
-      <h1 className="text-2xl font-semibold text-foreground mb-6">Edit Student</h1>
+      <div className="mt-4">
+        <h1 className="page-title">Edit student</h1>
+        <p className="mt-1 text-sm text-muted">Update profile details for {student.name}.</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="card mt-6 p-6">
         {error && (
-          <div className="px-3 py-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md">
-            {error}
+          <div className="alert alert-error mb-5" role="alert">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{error}</span>
           </div>
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="name" className="text-sm font-medium text-foreground">Name</label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-          />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="field sm:col-span-2">
+            <label htmlFor="name" className="label">Name <span className="text-danger">*</span></label>
+            <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required className="input" />
+          </div>
+
+          <div className="field sm:col-span-2">
+            <label htmlFor="email" className="label">Email <span className="text-danger">*</span></label>
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="input" />
+            <p className="hint">Changing this updates the contact email, not the login email.</p>
+          </div>
+
+          <div className="field">
+            <label htmlFor="subject" className="label">Subject <span className="text-danger">*</span></label>
+            <input id="subject" type="text" value={subject} onChange={(e) => setSubject(e.target.value)} required className="input" />
+          </div>
+
+          <div className="field">
+            <label htmlFor="currentLevel" className="label">Current level</label>
+            <input id="currentLevel" type="text" value={currentLevel} onChange={(e) => setCurrentLevel(e.target.value)} className="input" />
+          </div>
+
+          <div className="field sm:col-span-2">
+            <label htmlFor="learningGoals" className="label">Learning goals</label>
+            <textarea
+              id="learningGoals"
+              value={learningGoals}
+              onChange={(e) => setLearningGoals(e.target.value)}
+              rows={3}
+              className="input input-textarea"
+            />
+          </div>
+
+          <div className="field sm:col-span-2">
+            <label htmlFor="weakAreas" className="label">Weak areas</label>
+            <textarea
+              id="weakAreas"
+              value={weakAreas}
+              onChange={(e) => setWeakAreas(e.target.value)}
+              rows={3}
+              className="input input-textarea"
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-foreground">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-          />
-          <p className="text-xs text-muted">
-            Changing this updates the contact email, not the login email.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="subject" className="text-sm font-medium text-foreground">Subject</label>
-          <input
-            id="subject"
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="currentLevel" className="text-sm font-medium text-foreground">Current Level</label>
-          <input
-            id="currentLevel"
-            type="text"
-            value={currentLevel}
-            onChange={(e) => setCurrentLevel(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="learningGoals" className="text-sm font-medium text-foreground">Learning Goals</label>
-          <textarea
-            id="learningGoals"
-            value={learningGoals}
-            onChange={(e) => setLearningGoals(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent resize-none"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="weakAreas" className="text-sm font-medium text-foreground">Weak Areas</label>
-          <textarea
-            id="weakAreas"
-            value={weakAreas}
-            onChange={(e) => setWeakAreas(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent resize-none"
-          />
-        </div>
-
-        <div className="flex gap-3 mt-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? "Saving..." : "Save Changes"}
+        <div className="mt-6 flex flex-wrap items-center gap-2.5 border-t border-border pt-5">
+          <button type="submit" disabled={saving} className="btn btn-primary">
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                Saving…
+              </>
+            ) : (
+              <>
+                <Pencil className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                Save changes
+              </>
+            )}
           </button>
-          <Link
-            href={`/tutor/students/${id}`}
-            className="px-4 py-2 text-sm font-medium text-muted border border-border rounded-md hover:text-foreground hover:bg-accent-light/50 transition-colors"
-          >
+          <Link href={`/tutor/students/${id}`} className="btn btn-secondary">
             Cancel
           </Link>
         </div>
