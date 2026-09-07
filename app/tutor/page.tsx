@@ -9,11 +9,12 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import EditProfileDialog from "@/components/EditProfileDialog";
+import EmptyState from "@/components/EmptyState";
 import PageHeader from "@/components/PageHeader";
 import SectionHeader from "@/components/SectionHeader";
 import SessionRow from "@/components/SessionRow";
 import StatCard from "@/components/StatCard";
-import EmptyState from "@/components/EmptyState";
 
 type SessionLike = {
   id: string;
@@ -127,6 +128,11 @@ export default async function TutorPage() {
         subtitle="Here's what's happening across your tutoring sessions."
         actions={
           <>
+            <EditProfileDialog
+              initialName={profile?.full_name ?? ""}
+              role={profile?.role ?? ""}
+              triggerClassName="btn btn-secondary"
+            />
             <Link href="/tutor/students/new" className="btn btn-secondary">
               <UserPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               Add student

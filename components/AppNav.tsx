@@ -20,6 +20,7 @@ import {
 import type { UserProfile } from "@/lib/supabase/auth";
 import { THEMES } from "@/lib/theme/config";
 import Avatar from "./Avatar";
+import EditProfileDialog from "./EditProfileDialog";
 import { useTheme } from "./ThemeProvider";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -342,6 +343,16 @@ export default function AppNav({
   const accountMenuBody = (
     <>
       {accountIdentity}
+      <div className="p-1.5">
+        <EditProfileDialog
+          initialName={profile.full_name}
+          role={profile.role}
+          triggerClassName="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground"
+          triggerLabel="Edit profile"
+          triggerRole="menuitem"
+          onOpen={closeAccount}
+        />
+      </div>
       <div className="px-3 pb-1 pt-3">
         <p className="caption">Theme</p>
       </div>

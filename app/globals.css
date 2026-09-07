@@ -118,14 +118,15 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --background: #0a101f;
-  --surface: #101a2c;
-  --surface-muted: rgb(148 163 184 / 0.1);
-  --surface-elevated: #152138;
-  --surface-popover: #1a2640;
-  --surface-glass: rgba(21, 33, 56, 0.72);
-  --glass-border: rgb(148 163 184 / 0.22);
-  --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  /* Neutral graphite with a steel-blue interaction language. */
+  --background: #080b10;
+  --surface: #111822;
+  --surface-muted: rgb(180 196 215 / 0.075);
+  --surface-elevated: #17212d;
+  --surface-popover: #1a2532;
+  --surface-glass: rgb(18 26 37 / 0.72);
+  --glass-border: rgb(214 226 240 / 0.12);
+  --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.075);
 
   --foreground: #e6edf7;
   --muted: #94a3b8;
@@ -135,10 +136,10 @@
   --border-strong: rgb(148 163 184 / 0.3);
   --border-subtle: rgb(148 163 184 / 0.07);
 
-  --accent: #6366f1;
-  --accent-strong: #818cf8;
-  --accent-light: rgb(99 102 241 / 0.18);
-  --accent-ring: #a5b4fc;
+  --accent: #5b9bff;
+  --accent-strong: #8bb8ff;
+  --accent-light: rgb(91 155 255 / 0.16);
+  --accent-ring: #a7c9ff;
 
   --success: #16a34a;
   --success-strong: #4ade80;
@@ -156,24 +157,24 @@
   --danger-strong: #f87171;
   --danger-light: rgb(220 38 38 / 0.16);
 
-  --ai: #8b5cf6;
-  --ai-strong: #c4b5fd;
-  --ai-light: rgb(139 92 246 / 0.18);
+  --ai: #78afff;
+  --ai-strong: #b9d4ff;
+  --ai-light: rgb(91 155 255 / 0.13);
 
   --on-accent: #ffffff;
   --on-success: #022c22;
   --on-danger: #450a0a;
 
-  --focus-ring: #818cf8;
+  --focus-ring: #78afff;
 
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.35), 0 2px 8px -2px rgb(0 0 0 / 0.3);
-  --shadow-card-hover: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 4px 16px -2px rgb(0 0 0 / 0.4);
-  --shadow-elevated: 0 4px 12px -2px rgb(0 0 0 / 0.4), 0 12px 28px -8px rgb(0 0 0 / 0.5);
-  --shadow-popover: 0 8px 20px -4px rgb(0 0 0 / 0.5), 0 20px 44px -8px rgb(0 0 0 / 0.6);
-  --shadow-dialog: 0 16px 40px -8px rgb(0 0 0 / 0.6), 0 32px 80px -12px rgb(0 0 0 / 0.7);
-  --shadow-glass: 0 8px 24px -6px rgb(0 0 0 / 0.5), var(--glass-highlight);
-  --glow-accent: 0 0 0 1px rgb(99 102 241 / 0.35), 0 8px 24px -6px rgb(99 102 241 / 0.3);
+  --shadow-card: 0 8px 24px -18px rgb(0 0 0 / 0.85), 0 1px 1px rgb(0 0 0 / 0.2);
+  --shadow-card-hover: 0 16px 32px -20px rgb(0 0 0 / 0.92), 0 1px 1px rgb(0 0 0 / 0.25);
+  --shadow-elevated: 0 20px 44px -26px rgb(0 0 0 / 0.9), 0 2px 4px rgb(0 0 0 / 0.2);
+  --shadow-popover: 0 24px 52px -22px rgb(0 0 0 / 0.82), 0 4px 12px rgb(0 0 0 / 0.32);
+  --shadow-dialog: 0 32px 84px -28px rgb(0 0 0 / 0.9), 0 8px 20px rgb(0 0 0 / 0.35);
+  --shadow-glass: 0 18px 38px -26px rgb(0 0 0 / 0.86), var(--glass-highlight);
+  --glow-accent: 0 0 0 1px rgb(91 155 255 / 0.18), 0 12px 28px -16px rgb(91 155 255 / 0.42);
 
   --blur-glass: 16px;
 }
@@ -239,6 +240,27 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* The atmospheric layer belongs to the application shell, not individual
+   cards. This keeps depth present without layering expensive blur effects. */
+.workspace-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  overflow: clip;
+  background:
+    radial-gradient(70rem 46rem at 72% -12%, rgb(75 132 204 / 0.12), transparent 57%),
+    radial-gradient(48rem 36rem at 10% 38%, rgb(96 133 171 / 0.07), transparent 62%),
+    linear-gradient(135deg, #080b10 0%, #0b1118 48%, #080b10 100%);
+}
+.workspace-shell::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 36%, rgb(0 0 0 / 0.28) 100%);
+}
+
 ::selection {
   background: var(--accent-light);
   color: var(--foreground);
@@ -281,13 +303,15 @@ body {
   .btn-primary {
     background: var(--accent);
     color: var(--on-accent);
+    border-color: color-mix(in srgb, var(--accent-strong) 48%, transparent);
+    box-shadow: var(--glow-accent), inset 0 1px 0 rgb(255 255 255 / 0.18);
   }
   .btn-primary:hover:not(:disabled) {
     background: var(--accent-strong);
   }
   .btn-secondary {
-    background: var(--surface);
-    border-color: var(--border);
+    background: var(--surface-glass);
+    border-color: var(--glass-border);
     color: var(--foreground);
   }
   .btn-secondary:hover:not(:disabled) {
@@ -335,7 +359,7 @@ body {
     width: 100%;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    background: var(--surface);
+    background: var(--surface-glass);
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -350,6 +374,9 @@ body {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .input { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   }
   .input:disabled {
     background: var(--surface-muted);
@@ -372,10 +399,14 @@ body {
 
   /* Cards & panels */
   .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    position: relative;
+    background: var(--surface-glass);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-card), var(--glass-highlight);
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .card { -webkit-backdrop-filter: blur(10px) saturate(1.08); backdrop-filter: blur(10px) saturate(1.08); }
   }
   .card-hover {
     transition: border-color var(--duration-fast) var(--ease-standard),
@@ -383,6 +414,7 @@ body {
       background-color var(--duration-fast) var(--ease-standard);
   }
   .card-hover:hover {
+    background: color-mix(in srgb, var(--surface-glass) 92%, white);
     border-color: var(--border-strong);
     box-shadow: var(--shadow-card-hover);
   }
@@ -390,7 +422,7 @@ body {
   /* Elevated / popover surfaces (used by future menus, pickers, dialogs) */
   .surface-elevated {
     background: var(--surface-elevated);
-    border: 1px solid var(--border);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-elevated);
   }
@@ -399,6 +431,9 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-popover);
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .surface-elevated, .surface-popover { -webkit-backdrop-filter: blur(20px) saturate(1.15); backdrop-filter: blur(20px) saturate(1.15); }
   }
 
   /* Glass surface — use selectively (sidebar, headers, menus, login panel).
@@ -423,7 +458,8 @@ body {
      (sidebar, mobile header, drawers). Opaque fallback when
      backdrop-filter is unsupported keeps content readable. */
   .glass-surface {
-    background: var(--surface);
+    background: var(--surface-glass);
+    box-shadow: var(--glass-highlight);
   }
   @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     .glass-surface {
@@ -457,7 +493,7 @@ body {
 
   /* ---- Typography hierarchy ---- */
   .page-title {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     line-height: 2rem;
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -503,6 +539,10 @@ body {
   }
 }
 
+@media (min-width: 640px) {
+  .page-title { font-size: 2rem; line-height: 2.35rem; }
+}
+
 /* ============================================================
    Login page — photographic background treatment.
    The photograph + navy/indigo overlay stack is a fixed brand
@@ -520,7 +560,7 @@ body {
 }
 .login-overlay {
   background:
-    radial-gradient(80rem 55rem at 14% 10%, rgb(99 102 241 / 0.16), transparent 55%),
+    radial-gradient(80rem 55rem at 14% 10%, rgb(91 155 255 / 0.14), transparent 55%),
     radial-gradient(110rem 80rem at 50% 45%, transparent 38%, rgb(10 16 31 / 0.6) 100%),
     linear-gradient(to right, rgb(10 16 31 / 0.9), rgb(10 16 31 / 0.75) 55%, rgb(10 16 31 / 0.82));
 }
