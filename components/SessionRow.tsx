@@ -26,10 +26,10 @@ export default function SessionRow({
   return (
     <Link
       href={href}
-      className="card card-hover group flex items-center gap-4 px-4 py-3.5"
+      className="card glass-card card-hover group flex items-center gap-4 px-4 py-3.5"
     >
       {/* Date tile (desktop/tablet) */}
-      <div className="hidden w-14 shrink-0 flex-col items-center rounded-lg border border-border-subtle bg-surface-muted/70 py-1.5 sm:flex">
+      <div className="hidden w-14 shrink-0 flex-col items-center rounded-lg border border-glass-border bg-surface-muted/70 py-1.5 shadow-[var(--glass-highlight)] sm:flex">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
           {month}
         </span>

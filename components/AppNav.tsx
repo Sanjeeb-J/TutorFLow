@@ -20,7 +20,6 @@ import {
 import type { UserProfile } from "@/lib/supabase/auth";
 import { THEMES } from "@/lib/theme/config";
 import Avatar from "./Avatar";
-import EditProfileDialog from "./EditProfileDialog";
 import { useTheme } from "./ThemeProvider";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -76,6 +75,7 @@ export default function AppNav({
 
   const items = NAV_ITEMS[role];
   const root = `/${role}`;
+  const isDark = theme === 'dark';
 
   function isActive(item: NavItem) {
     return item.href === root ? pathname === root : pathname.startsWith(item.href);
@@ -227,11 +227,12 @@ export default function AppNav({
     <div className="flex items-center gap-2.5">
       <span
         aria-hidden="true"
-        className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-light"
+        className="flex h-8 w-8 items-center justify-center rounded-lg"
+        style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}
       >
-        <BookOpen className="h-4 w-4 text-accent" strokeWidth={2} aria-hidden="true" />
+        <BookOpen className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
       </span>
-      <span className="text-[15px] font-semibold tracking-tight text-foreground">
+      <span className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--sidebar-text)' }}>
         TutorFlow
       </span>
     </div>
@@ -250,7 +251,7 @@ export default function AppNav({
               aria-current={active ? "page" : undefined}
               className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] ${
                 active
-                  ? "bg-accent-light font-medium text-accent-strong"
+                  ? "border border-accent/20 bg-accent-light font-medium text-accent-strong shadow-[var(--glow-accent)]"
                   : "text-muted-strong hover:bg-surface-muted hover:text-foreground"
               }`}
             >
@@ -281,13 +282,13 @@ export default function AppNav({
 
   /** Identity block inside the account menu. */
   const accountIdentity = (
-    <div className="flex items-center gap-3 border-b border-border px-3 py-3">
+    <div className={`flex items-center gap-3 border-b p-3 ${isDark ? "border-white/10" : "border-gray-200"}`}>
       <Avatar name={profile.full_name} size="md" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">
+        <p className="truncate text-sm font-medium" style={{ color: isDark ? 'var(--foreground)' : 'var(--sidebar-text)' }}>
           {profile.full_name}
         </p>
-        <p className="truncate text-xs capitalize text-muted">{role}</p>
+        <p className="truncate text-xs capitalize" style={{ color: isDark ? 'var(--muted)' : 'var(--sidebar-muted)' }}>{role}</p>
       </div>
     </div>
   );
@@ -306,18 +307,20 @@ export default function AppNav({
               onClick={() => setTheme(t.id)}
               className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] ${
                 selected
-                  ? "bg-accent-light font-medium text-accent-strong"
-                  : "text-muted-strong hover:bg-surface-muted hover:text-foreground"
+                  ? "border border-accent/20 bg-accent-light font-medium text-accent-strong shadow-[var(--glow-accent)]"
+                  : isDark
+                    ? "text-muted-strong hover:bg-surface-muted hover:text-foreground"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               }`}
             >
               <span
                 aria-hidden="true"
-                className="h-4 w-4 shrink-0 rounded-full border border-border-strong"
+                className={`h-4 w-4 shrink-0 rounded-full border ${isDark ? "border-white/20" : "border-gray-300"}`}
                 style={{ backgroundColor: t.swatch }}
               />
               <span className="flex-1 text-left">{t.label}</span>
               {selected && (
-                <Check className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+                <Check className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden="true" style={{ color: isDark ? 'var(--accent)' : 'var(--accent-strong)' }} />
               )}
             </button>
           </li>
@@ -332,7 +335,11 @@ export default function AppNav({
       role="menuitem"
       onClick={handleLogout}
       disabled={loggingOut}
-      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground disabled:opacity-60"
+      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] disabled:opacity-60 ${
+        isDark
+          ? "text-muted-strong hover:bg-surface-muted hover:text-foreground"
+          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+      }`}
     >
       <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
       {loggingOut ? "Signing out…" : "Sign out"}
@@ -343,26 +350,28 @@ export default function AppNav({
   const accountMenuBody = (
     <>
       {accountIdentity}
-      <div className="p-1.5">
-        <EditProfileDialog
-          initialName={profile.full_name}
-          role={profile.role}
-          triggerClassName="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground"
-          triggerLabel="Edit profile"
-          triggerRole="menuitem"
-          onOpen={closeAccount}
-        />
-      </div>
       <div className="px-3 pb-1 pt-3">
-        <p className="caption">Theme</p>
+        <p className="caption" style={{ color: isDark ? 'var(--muted)' : 'var(--sidebar-muted)' }}>Theme</p>
       </div>
       {themeOptions}
-      <div className="border-t border-border p-1.5">{signOutItem}</div>
+      <div className={`p-1.5 ${isDark ? "border-t border-white/10" : "border-t border-gray-200"}`}>{signOutItem}</div>
     </>
   );
 
+  const sidebarBase = isDark
+    ? "glass-surface fixed inset-y-0 left-0 z-30 hidden w-64 flex flex-col border-r border-glass-border shadow-[var(--shadow-elevated)] lg:flex"
+    : "fixed inset-y-0 left-0 z-30 hidden w-64 flex flex-col border-r border-border bg-[var(--sidebar-surface)] lg:flex";
+  const sidebarHeaderBase = isDark
+    ? "flex h-16 shrink-0 items-center border-b border-glass-border px-5"
+    : "flex h-16 shrink-0 items-center border-b border-border px-5";
+  const sidebarFooterBase = isDark
+    ? "border-t border-glass-border p-3"
+    : "border-t border-border p-3";
+
   const accountTriggerBase =
-    "rounded-md text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground";
+    isDark
+      ? "rounded-md text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground"
+      : "rounded-md text-[var(--sidebar-muted)] transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-black/5 hover:text-[var(--sidebar-text)]";
 
   return (
     <>
@@ -435,33 +444,45 @@ export default function AppNav({
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-14 shrink-0 items-center justify-between border-b border-glass-border px-5">
+        <div className={`flex h-14 shrink-0 items-center justify-between border-b px-5 ${isDark ? "border-glass-border" : "border-border"}`}>
           {brand}
           <button
             ref={closeButtonRef}
             onClick={closeMobile}
             aria-label="Close menu"
-            className="rounded-md p-1.5 text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground lg:hidden"
+            className={`rounded-md p-1.5 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] lg:hidden ${
+              isDark
+                ? "text-muted-strong hover:bg-surface-muted hover:text-foreground"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            }`}
           >
             <X className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
         {nav}
         {/* Static identity + sign out inside the drawer (unchanged). */}
-        <div className="border-t border-glass-border px-3 py-3">
-          <div className="flex items-center gap-3 rounded-xl bg-surface-muted/60 px-2.5 py-2.5">
+        <div className={`p-3 ${isDark ? "border-t border-glass-border" : "border-t border-border"}`}>
+          <div className={`flex items-center gap-3 rounded-xl p-2.5 shadow-[var(--glass-highlight)] ${
+            isDark
+              ? "border border-glass-border bg-surface-muted/60"
+              : "border-black/10 bg-black/5"
+          }`}>
             <Avatar name={profile.full_name} size="sm" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
+              <p className="truncate text-sm font-medium" style={{ color: isDark ? 'var(--foreground)' : 'var(--sidebar-text)' }}>
                 {profile.full_name}
               </p>
-              <p className="truncate text-xs capitalize text-muted">{role}</p>
+              <p className="truncate text-xs capitalize" style={{ color: isDark ? 'var(--muted)' : 'var(--sidebar-muted)' }}>{role}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground disabled:opacity-60"
+            className={`mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] disabled:opacity-60 ${
+              isDark
+                ? "text-muted-strong hover:bg-surface-muted hover:text-foreground"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            }`}
           >
             <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
             {loggingOut ? "Signing out…" : "Sign out"}
@@ -470,13 +491,12 @@ export default function AppNav({
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="glass-surface fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-glass-border lg:flex">
-        <div className="flex h-16 shrink-0 items-center border-b border-glass-border px-5">
+      <aside className={sidebarBase} style={{ color: isDark ? undefined : 'var(--sidebar-text)' }}>
+        <div className={sidebarHeaderBase} style={isDark ? undefined : { borderColor: 'var(--border)', color: 'var(--sidebar-text)' }}>
           {brand}
         </div>
         {nav}
-
-        <div className="border-t border-glass-border p-3">
+        <div className={sidebarFooterBase} style={isDark ? undefined : { borderColor: 'var(--border)' }}>
           <div className="relative" ref={desktopAccountRef}>
             <button
               type="button"
@@ -485,22 +505,27 @@ export default function AppNav({
               aria-expanded={accountOpen}
               aria-controls="account-menu-desktop"
               aria-label={`Account menu for ${profile.full_name}`}
-              className="flex w-full items-center gap-3 rounded-xl bg-surface-muted/60 px-2.5 py-2.5 text-left transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted"
+              className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left shadow-[var(--glass-highlight)] transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted ${
+                isDark
+                  ? "border-glass-border bg-surface-muted/60"
+                  : "border-black/10 bg-black/5"
+              }`}
             >
               <Avatar name={profile.full_name} size="sm" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-foreground">
+                <span className="block truncate text-sm font-medium" style={{ color: isDark ? 'var(--foreground)' : 'var(--sidebar-text)' }}>
                   {profile.full_name}
                 </span>
-                <span className="block truncate text-xs capitalize text-muted">
+                <span className="block truncate text-xs capitalize" style={{ color: isDark ? 'var(--muted)' : 'var(--sidebar-muted)' }}>
                   {role}
                 </span>
               </span>
               <ChevronDown
-                className={`h-4 w-4 shrink-0 text-muted transition-transform duration-[var(--duration-normal)] ease-[var(--ease-standard)] ${
+                className={`h-4 w-4 shrink-0 transition-transform duration-[var(--duration-normal)] ease-[var(--ease-standard)] ${
                   accountOpen ? "rotate-180" : ""
                 }`}
                 strokeWidth={1.75}
+                style={{ color: isDark ? 'var(--muted)' : 'var(--sidebar-muted)' }}
                 aria-hidden="true"
               />
             </button>
@@ -513,7 +538,11 @@ export default function AppNav({
                 aria-label="Account menu"
                 tabIndex={-1}
                 onKeyDown={handleAccountMenuKeyDown}
-                className="surface-popover absolute bottom-full left-0 z-50 mb-2 max-h-[min(26rem,calc(100vh-4rem))] w-60 overflow-y-auto"
+                className={`absolute bottom-full left-0 z-50 mb-2 max-h-[min(26rem,calc(100vh-4rem))] w-60 overflow-y-auto rounded-xl p-1.5 shadow-[var(--shadow-popover)] ${
+                  isDark
+                    ? "border border-white/10 bg-[#202020]"
+                    : "border border-black/10 bg-white"
+                }`}
               >
                 {accountMenuBody}
               </div>

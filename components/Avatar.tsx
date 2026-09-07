@@ -17,7 +17,7 @@ const SIZE_STYLES = {
 } as const;
 
 const TONE_STYLES = {
-  solid: "bg-accent text-white font-semibold",
+  solid: "bg-accent text-[var(--on-accent)] font-semibold",
   soft: "bg-accent-light text-accent-strong font-semibold",
 } as const;
 

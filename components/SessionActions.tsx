@@ -440,9 +440,6 @@ export default function SessionActions({
                   </ol>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 px-5 py-3">
-                  <span className="rounded-md bg-ai-light px-2 py-0.5 text-[11px] font-medium text-ai-strong">
-                    AI-generated
-                  </span>
                   <span className="text-[11px] text-muted">
                     Prepared for {student.name} from their profile and recent session history.
                   </span>
@@ -529,11 +526,6 @@ export default function SessionActions({
                       <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-ai" strokeWidth={1.75} aria-hidden="true" />
                       <p className="text-sm leading-relaxed text-foreground">{review.next_topic}</p>
                     </div>
-                  </div>
-                  <div className="px-5 py-3">
-                    <span className="rounded-md bg-ai-light px-2 py-0.5 text-[11px] font-medium text-ai-strong">
-                      AI-generated from this completed session
-                    </span>
                   </div>
                 </div>
               ) : isCompleted ? (

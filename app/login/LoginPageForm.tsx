@@ -45,7 +45,7 @@ export default function LoginPageForm() {
   }
 
   return (
-    <div className="w-full rounded-2xl border border-border bg-surface-popover p-6 shadow-[var(--shadow-popover)] sm:p-8">
+    <div className="surface-popover w-full rounded-2xl p-6 shadow-[var(--shadow-dialog)] sm:p-8">
       <div className="mb-7">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Welcome back

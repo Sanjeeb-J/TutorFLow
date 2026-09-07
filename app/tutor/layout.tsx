@@ -9,11 +9,11 @@ export default async function TutorLayout({
   const profile = await requireTutor();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="workspace-shell">
       <AppNav role="tutor" profile={profile} />
-      <div className="lg:pl-64">
-        <main className="px-4 pb-14 pt-20 sm:px-6 lg:px-8 lg:pb-16 lg:pt-10">
-          <div className="mx-auto w-full max-w-5xl">{children}</div>
+      <div className="lg:pl-60">
+        <main className="relative px-4 pb-14 pt-6 sm:px-6 lg:px-6 lg:pb-12 lg:pt-6">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>
     </div>

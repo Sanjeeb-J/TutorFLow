@@ -15,10 +15,10 @@ export default function EmptyState({
 }) {
   return (
     <div
-      className={`card flex flex-col items-center px-6 py-12 text-center ${className}`}
+      className={`card glass-card flex flex-col items-center px-6 py-9 text-center sm:py-10 ${className}`}
     >
       {Icon && (
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-border-subtle bg-surface-muted/70">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-glass-border bg-surface-muted/70 shadow-[var(--glass-highlight)]">
           <Icon className="h-5 w-5 text-muted" strokeWidth={1.75} aria-hidden="true" />
         </div>
       )}

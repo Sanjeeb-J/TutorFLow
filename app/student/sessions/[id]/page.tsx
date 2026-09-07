@@ -1,11 +1,12 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { CalendarDays, ClipboardList, Clock, FileText, Sparkles } from "lucide-react";
+import { CalendarDays, ClipboardList, Clock, FileText, Sparkles, Target } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
 import HomeworkToggle from "@/components/HomeworkToggle";
+import { TrendingDown } from "lucide-react";
 
 export default async function StudentSessionDetailPage({
   params,
@@ -40,6 +41,8 @@ export default async function StudentSessionDetailPage({
 
   const isReviewed = session.status === "ai_reviewed";
   const isCompleted = session.status === "completed" || isReviewed;
+  // Show lesson plan for completed or ai_reviewed sessions
+  const showLessonPlan = isCompleted;
 
   let review = null;
   let homework: Array<{ id: string; description: string; completed: boolean }> = [];
@@ -60,6 +63,23 @@ export default async function StudentSessionDetailPage({
       homework = hwData || [];
     }
   }
+
+  // Fetch AI lesson plan (available for all completed/ai_reviewed sessions)
+  const { data: planData } = await supabase
+    .from("ai_lesson_plans")
+    .select("learning_objectives, lesson_outline, practice_questions")
+    .eq("session_id", id)
+    .single();
+  let lessonPlan = null;
+  if (planData) {
+    lessonPlan = {
+      learningObjectives: (planData.learning_objectives as Array<{ id: string; text: string }>) ?? [],
+      lessonOutline: (planData.lesson_outline as Array<{ id: string; text: string }>) ?? [],
+      practiceQuestions: (planData.practice_questions as Array<{ id: string; text: string }>) ?? [],
+    };
+  }
+
+
 
   const pendingCount = homework.filter((h) => !h.completed).length;
 
@@ -116,6 +136,77 @@ export default async function StudentSessionDetailPage({
           </div>
         </div>
       </div>
+
+      {/* AI Lesson Plan */}
+      {showLessonPlan && lessonPlan && (
+        <section className="mt-8" aria-labelledby="lesson-plan-heading">
+          <h2
+            id="lesson-plan-heading"
+            className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground"
+          >
+            <Sparkles className="h-4 w-4 text-ai" strokeWidth={1.75} aria-hidden="true" />
+            AI lesson plan
+          </h2>
+          <div className="card divide-y divide-border overflow-hidden">
+            {/* Learning objectives */}
+            <div className="px-5 py-4">
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <h3 className="text-sm font-medium text-foreground">Learning objectives</h3>
+                <span className="text-[11px] text-muted">2–4 recommended</span>
+              </div>
+              <ul className="space-y-2">
+                {lessonPlan.learningObjectives.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-foreground">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent-light text-xs font-semibold text-accent-strong">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="leading-relaxed">{item.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Lesson outline */}
+            <div className="px-5 py-4">
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <h3 className="text-sm font-medium text-foreground">Lesson outline</h3>
+                <span className="text-[11px] text-muted">Exactly {lessonPlan.lessonOutline.length} steps</span>
+              </div>
+              <ol className="space-y-2">
+                {lessonPlan.lessonOutline.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-foreground">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface-muted text-xs font-semibold text-muted-strong">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="leading-relaxed">{item.text}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            {/* Practice questions */}
+            <div className="px-5 py-4">
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <h3 className="text-sm font-medium text-foreground">Practice questions</h3>
+                <span className="text-[11px] text-muted">Exactly {lessonPlan.practiceQuestions.length} questions</span>
+              </div>
+              <ol className="space-y-2">
+                {lessonPlan.practiceQuestions.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-foreground">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-success-light text-xs font-semibold text-success-strong">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="leading-relaxed">{item.text}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="flex items-center gap-2 px-5 py-3">
+              <span className="text-[11px] text-muted">
+                Prepared for {profile?.full_name?.split(/\s+/)[0] ?? "you"} from your profile and recent session history.
+              </span>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Notes */}
       <section className="mt-8" aria-labelledby="notes-heading">

@@ -13,8 +13,10 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-20 min-h-screen bg-background">
-      <div className="flex flex-col items-center text-center max-w-md">
+    <div className="login-shell relative flex min-h-screen flex-col items-center justify-center px-6 py-20">
+      <div className="login-photo absolute inset-0 -z-10" aria-hidden="true" />
+      <div className="login-overlay absolute inset-0 -z-10" aria-hidden="true" />
+      <div className="card flex max-w-md flex-col items-center p-8 text-center sm:p-10">
         <span
           className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent-light mb-6"
           aria-hidden="true"

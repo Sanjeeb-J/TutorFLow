@@ -25,7 +25,11 @@
   --surface-elevated: #ffffff; /* raised panels above the surface */
   --surface-popover: #ffffff; /* menus, popovers, dialogs */
   --surface-glass: rgba(255, 255, 255, 0.72); /* frosted glass fill */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.84);
+  --glass-bg-popover: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(226, 232, 240, 0.9);
+  --glass-border-strong: rgba(203, 213, 225, 0.96);
   --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.7);
 
   /* ---- Text ---- */
@@ -38,11 +42,11 @@
   --border-strong: #cbd5e1;
   --border-subtle: #eef2f6;
 
-  /* ---- Primary — deep indigo/blue ---- */
-  --accent: #4f46e5;
-  --accent-strong: #4338ca;
-  --accent-light: #eef2ff; /* tinted fill (indigo-50) */
-  --accent-ring: #a5b4fc;
+  /* ---- Primary — restrained productivity blue ---- */
+  --accent: #3979d6;
+  --accent-strong: #2865ba;
+  --accent-light: #eaf2ff;
+  --accent-ring: #9fc4ff;
 
   /* ---- Semantic — status colors ---- */
   --success: #16a34a;
@@ -61,9 +65,9 @@
   --danger-strong: #b91c1c;
   --danger-light: #fef2f2;
 
-  --ai: #7c3aed; /* AI-generated content */
-  --ai-strong: #6d28d9;
-  --ai-light: #f5f3ff;
+  --ai: #3979d6; /* AI-assisted content uses the product accent */
+  --ai-strong: #2865ba;
+  --ai-light: #eaf2ff;
 
   /* Text that sits on filled color surfaces */
   --on-accent: #ffffff;
@@ -71,7 +75,7 @@
   --on-danger: #ffffff;
 
   /* ---- Focus ---- */
-  --focus-ring: #4f46e5;
+  --focus-ring: #3979d6;
 
   /* ---- Radius scale ---- */
   --radius-xs: 0.25rem; /* tiny chips, inner tiles */
@@ -118,15 +122,18 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* Neutral graphite with a steel-blue interaction language. */
-  --background: #080b10;
-  --surface: #111822;
-  --surface-muted: rgb(180 196 215 / 0.075);
-  --surface-elevated: #17212d;
-  --surface-popover: #1a2532;
-  --surface-glass: rgb(18 26 37 / 0.72);
-  --glass-border: rgb(214 226 240 / 0.12);
-  --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.075);
+  --background: #050505;
+  --surface: #151515;
+  --surface-muted: rgb(255 255 255 / 0.06);
+  --surface-elevated: #1d1d1d;
+  --surface-popover: #202020;
+  --surface-glass: rgb(24 24 24 / 0.78);
+  --glass-bg: rgb(26 26 26 / 0.82);
+  --glass-bg-elevated: rgb(32 32 32 / 0.9);
+  --glass-bg-popover: rgb(37 37 37 / 0.95);
+  --glass-border: rgb(255 255 255 / 0.1);
+  --glass-border-strong: rgb(255 255 255 / 0.18);
+  --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.06);
 
   --foreground: #e6edf7;
   --muted: #94a3b8;
@@ -136,10 +143,10 @@
   --border-strong: rgb(148 163 184 / 0.3);
   --border-subtle: rgb(148 163 184 / 0.07);
 
-  --accent: #5b9bff;
-  --accent-strong: #8bb8ff;
-  --accent-light: rgb(91 155 255 / 0.16);
-  --accent-ring: #a7c9ff;
+  --accent: #c7ff56;
+  --accent-strong: #b8ff54;
+  --accent-light: rgb(199 255 86 / 0.14);
+  --accent-ring: #ddffa5;
 
   --success: #16a34a;
   --success-strong: #4ade80;
@@ -157,15 +164,19 @@
   --danger-strong: #f87171;
   --danger-light: rgb(220 38 38 / 0.16);
 
-  --ai: #78afff;
-  --ai-strong: #b9d4ff;
-  --ai-light: rgb(91 155 255 / 0.13);
+  --ai: #c7ff56;
+  --ai-strong: #dcff9d;
+  --ai-light: rgb(199 255 86 / 0.12);
 
-  --on-accent: #ffffff;
+  --on-accent: #1a1a1a;
   --on-success: #022c22;
   --on-danger: #450a0a;
 
-  --focus-ring: #78afff;
+  --focus-ring: #c7ff56;
+
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
 
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-card: 0 8px 24px -18px rgb(0 0 0 / 0.85), 0 1px 1px rgb(0 0 0 / 0.2);
@@ -174,9 +185,86 @@
   --shadow-popover: 0 24px 52px -22px rgb(0 0 0 / 0.82), 0 4px 12px rgb(0 0 0 / 0.32);
   --shadow-dialog: 0 32px 84px -28px rgb(0 0 0 / 0.9), 0 8px 20px rgb(0 0 0 / 0.35);
   --shadow-glass: 0 18px 38px -26px rgb(0 0 0 / 0.86), var(--glass-highlight);
-  --glow-accent: 0 0 0 1px rgb(91 155 255 / 0.18), 0 12px 28px -16px rgb(91 155 255 / 0.42);
+  --glow-accent: 0 0 0 1px rgb(199 255 86 / 0.2), 0 12px 28px -16px rgb(199 255 86 / 0.34);
 
   --blur-glass: 16px;
+}
+
+/* Light mode — clean white with same green accent as dark */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --surface-elevated: #ffffff;
+  --surface-popover: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.8);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg-elevated: #ffffff;
+  --glass-bg-popover: #ffffff;
+  --glass-border: rgba(226, 232, 240, 0.9);
+  --glass-border-strong: rgba(203, 213, 225, 0.96);
+  --glass-border-subtle: rgba(226, 232, 240, 0.5);
+  --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.8);
+
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --muted-strong: #475569;
+
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-subtle: #eef2f6;
+
+  --accent: #b8ff54;
+  --accent-strong: #4a7c0f;
+  --accent-light: #dcfce7;
+  --accent-ring: #b8ff54;
+
+  --success: #16a34a;
+  --success-strong: #15803d;
+  --success-light: #dcfce7;
+
+  --info: #2563eb;
+  --info-strong: #1d4ed8;
+  --info-light: #dbeafe;
+
+  --warning: #d97706;
+  --warning-strong: #b45309;
+  --warning-light: #fef3c7;
+
+  --danger: #dc2626;
+  --danger-strong: #b91c1c;
+  --danger-light: #fee2e2;
+
+  --ai: #b8ff54;
+  --ai-strong: #a0f03a;
+  --ai-light: #dcfce7;
+
+  --on-accent: #1a1a1a;
+  --on-success: #ffffff;
+  --on-danger: #ffffff;
+
+  --focus-ring: #b8ff54;
+
+  --sidebar-surface: #e5e5e5;
+  --sidebar-text: #1a1a1a;
+  --sidebar-muted: #6b7280;
+
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.04);
+  --shadow-card-hover: 0 1px 2px 0 rgb(15 23 42 / 0.05), 0 4px 12px -2px rgb(15 23 42 / 0.08);
+  --shadow-elevated: 0 2px 4px -1px rgb(15 23 42 / 0.06), 0 8px 20px -4px rgb(15 23 42 / 0.1);
+  --shadow-popover: 0 4px 8px -2px rgb(15 23 42 / 0.08), 0 16px 32px -8px rgb(15 23 42 / 0.16);
+  --shadow-dialog: 0 8px 16px -4px rgb(15 23 42 / 0.1), 0 28px 64px -12px rgb(15 23 42 / 0.24);
+  --shadow-glass: 0 4px 16px -4px rgb(15 23 42 / 0.1), var(--glass-highlight);
+  --glow-accent: 0 0 0 1px rgb(184 255 84 / 0.3), 0 8px 24px -8px rgb(184 255 84 / 0.4);
+
+  --blur-glass: 12px;
 }
 
 /* ============================================================
@@ -192,6 +280,8 @@
   --color-surface-elevated: var(--surface-elevated);
   --color-surface-popover: var(--surface-popover);
   --color-surface-glass: var(--surface-glass);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-bg-elevated: var(--glass-bg-elevated);
   --color-glass-border: var(--glass-border);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
@@ -231,10 +321,11 @@
 
 html {
   background: var(--background);
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
+  background: inherit;
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -247,10 +338,6 @@ body {
   isolation: isolate;
   min-height: 100vh;
   overflow: clip;
-  background:
-    radial-gradient(70rem 46rem at 72% -12%, rgb(75 132 204 / 0.12), transparent 57%),
-    radial-gradient(48rem 36rem at 10% 38%, rgb(96 133 171 / 0.07), transparent 62%),
-    linear-gradient(135deg, #080b10 0%, #0b1118 48%, #080b10 100%);
 }
 .workspace-shell::before {
   content: "";
@@ -258,7 +345,20 @@ body {
   z-index: -1;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at center, transparent 36%, rgb(0 0 0 / 0.28) 100%);
+}
+
+:root[data-theme="dark"] .workspace-shell {
+  background:
+    radial-gradient(58rem 42rem at 74% -16%, rgb(199 255 86 / 0.075), transparent 58%),
+    radial-gradient(44rem 34rem at 12% 94%, rgb(255 255 255 / 0.035), transparent 62%),
+    linear-gradient(135deg, #050505 0%, #0a0a0a 48%, #050505 100%);
+}
+:root[data-theme="dark"] .workspace-shell::before {
+  background: radial-gradient(ellipse at center, transparent 30%, rgb(0 0 0 / 0.36) 100%);
+}
+
+@media (min-width: 1024px) {
+  body { background: var(--background); }
 }
 
 ::selection {
@@ -310,7 +410,7 @@ body {
     background: var(--accent-strong);
   }
   .btn-secondary {
-    background: var(--surface-glass);
+    background: var(--glass-bg);
     border-color: var(--glass-border);
     color: var(--foreground);
   }
@@ -359,7 +459,7 @@ body {
     width: 100%;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    background: var(--surface-glass);
+    background: var(--glass-bg);
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -400,13 +500,19 @@ body {
   /* Cards & panels */
   .card {
     position: relative;
-    background: var(--surface-glass);
+    background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card), var(--glass-highlight);
   }
+  /* Keep ordinary list rows lightweight; frost only spotlight surfaces. */
+  .glass-card {
+    background: var(--glass-bg-elevated);
+    border-color: var(--glass-border-strong);
+    box-shadow: var(--shadow-elevated), var(--glass-highlight);
+  }
   @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    .card { -webkit-backdrop-filter: blur(10px) saturate(1.08); backdrop-filter: blur(10px) saturate(1.08); }
+    .glass-card { -webkit-backdrop-filter: blur(10px) saturate(1.08); backdrop-filter: blur(10px) saturate(1.08); }
   }
   .card-hover {
     transition: border-color var(--duration-fast) var(--ease-standard),
@@ -414,21 +520,21 @@ body {
       background-color var(--duration-fast) var(--ease-standard);
   }
   .card-hover:hover {
-    background: color-mix(in srgb, var(--surface-glass) 92%, white);
+    background: color-mix(in srgb, var(--glass-bg) 92%, white);
     border-color: var(--border-strong);
     box-shadow: var(--shadow-card-hover);
   }
 
   /* Elevated / popover surfaces (used by future menus, pickers, dialogs) */
   .surface-elevated {
-    background: var(--surface-elevated);
+    background: var(--glass-bg-elevated);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-elevated);
   }
   .surface-popover {
-    background: var(--surface-popover);
-    border: 1px solid var(--border);
+    background: var(--glass-bg-popover);
+    border: 1px solid var(--glass-border-strong);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-popover);
   }
@@ -446,7 +552,7 @@ body {
   }
   @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     .glass {
-      background: var(--surface-glass);
+      background: var(--glass-bg-elevated);
       border-color: var(--glass-border);
       box-shadow: var(--shadow-glass);
       -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
@@ -458,12 +564,12 @@ body {
      (sidebar, mobile header, drawers). Opaque fallback when
      backdrop-filter is unsupported keeps content readable. */
   .glass-surface {
-    background: var(--surface-glass);
+    background: var(--glass-bg);
     box-shadow: var(--glass-highlight);
   }
   @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     .glass-surface {
-      background: var(--surface-glass);
+      background: var(--glass-bg);
       -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
       backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
     }
@@ -545,24 +651,24 @@ body {
 
 /* ============================================================
    Login page — photographic background treatment.
-   The photograph + navy/indigo overlay stack is a fixed brand
+   The photograph + navy/steel-blue overlay stack is a fixed brand
    atmosphere that stays dark in every theme (contrast over the photo
    is guaranteed). The login panel and form keep using semantic tokens,
    so the page still responds to the active theme system.
    ============================================================ */
 .login-shell {
-  background: #0a101f; /* deep navy while the photo loads — no light flash */
+  background: #050505; /* dark neutral while the photo loads — no light flash */
 }
 .login-photo {
-  background-image: url("/images/login/tutorflow-login-bg.jpg");
+  background-image: url("/images/login/tutorflow-login-workspace.png");
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
 }
 .login-overlay {
   background:
-    radial-gradient(80rem 55rem at 14% 10%, rgb(91 155 255 / 0.14), transparent 55%),
-    radial-gradient(110rem 80rem at 50% 45%, transparent 38%, rgb(10 16 31 / 0.6) 100%),
-    linear-gradient(to right, rgb(10 16 31 / 0.9), rgb(10 16 31 / 0.75) 55%, rgb(10 16 31 / 0.82));
+    radial-gradient(80rem 55rem at 14% 10%, rgb(199 255 86 / 0.2), transparent 55%),
+    linear-gradient(to right, rgb(5 5 5 / 0.3), rgb(5 5 5 / 0.2) 55%, rgb(5 5 5 / 0.35));
 }
 /* Fixed light text over the photograph (all themes) */
 .login-overlay-text {

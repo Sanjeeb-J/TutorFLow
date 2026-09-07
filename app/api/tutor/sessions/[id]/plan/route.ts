@@ -89,8 +89,8 @@ export async function POST(
     // Validate with Zod
     const validated = SessionPlanSchema.parse(output);
 
-    // Save to database
-    const { data: plan, error } = await supabase
+    // Save to session_plans table
+    const { data: plan, error: planError } = await supabase
       .from("session_plans")
       .insert({
         session_id: id,
@@ -104,11 +104,28 @@ export async function POST(
       .select("id, objectives, lesson_outline, practice_questions")
       .single();
 
-    if (error) {
+    if (planError) {
       return NextResponse.json(
         { error: "Failed to save session plan." },
         { status: 500 },
       );
+    }
+
+    // Also save to ai_lesson_plans for the student to see
+    const { error: lessonPlanError } = await supabase
+      .from("ai_lesson_plans")
+      .upsert({
+        student_id: session.student_id,
+        session_id: id,
+        learning_objectives: validated.objectives.map((text, i) => ({ id: `${String(i + 1).padStart(2, '0')}`, text })),
+        lesson_outline: validated.lesson_outline.map((text, i) => ({ id: `${String(i + 1).padStart(2, '0')}`, text })),
+        practice_questions: validated.practice_questions.map((text, i) => ({ id: `${String(i + 1).padStart(2, '0')}`, text })),
+        topic: session.topic,
+      }, { onConflict: 'student_id, session_id' });
+
+    if (lessonPlanError) {
+      console.error('Failed to save AI lesson plan for student:', lessonPlanError);
+      // Don't fail the request if this fails - the plan is still saved
     }
 
     return NextResponse.json({ plan });

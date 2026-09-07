@@ -7,6 +7,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
+  Sparkles,
 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import HomeworkToggle from "@/components/HomeworkToggle";
@@ -73,6 +74,11 @@ export default async function StudentDashboard() {
       .select("id", { count: "exact", head: true })
       .eq("completed", false)
   ).count;
+
+  // Fetch AI lesson plan for the student
+  const { data: lessonPlan } = await supabase
+    .from("ai_lesson_plans")
+    .select("*")
 
   // Map review session ids to topics the student can see
   const sessionIds = Array.from(

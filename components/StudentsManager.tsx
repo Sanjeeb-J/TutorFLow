@@ -57,7 +57,7 @@ export default function StudentsManager({
       ) : (
         <>
           {/* Search + result count */}
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-5 flex flex-col gap-3 rounded-xl border border-glass-border bg-surface-glass p-3 shadow-[var(--glass-highlight)] sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
@@ -88,7 +88,7 @@ export default function StudentsManager({
                   <Link
                     key={student.id}
                     href={`/tutor/students/${student.id}`}
-                    className="card card-hover group flex items-center gap-4 px-4 py-3.5"
+                    className="card glass-card card-hover group flex items-center gap-4 px-4 py-3.5"
                   >
                     <Avatar name={student.name} size="md" />
 
