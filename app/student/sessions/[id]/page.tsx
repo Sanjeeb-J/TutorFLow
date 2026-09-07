@@ -1,8 +1,8 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, CalendarDays, ClipboardList, Clock, FileText, Sparkles } from "lucide-react";
+import { CalendarDays, ClipboardList, Clock, FileText, Sparkles } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
 import HomeworkToggle from "@/components/HomeworkToggle";
@@ -65,22 +65,13 @@ export default async function StudentSessionDetailPage({
 
   return (
     <div>
-      <Link
-        href="/student/sessions"
-        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-        Back to sessions
-      </Link>
-
-      {/* Header */}
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="page-title">{session.topic}</h1>
-          {tutor && <p className="mt-1 text-sm text-muted">with {tutor.full_name}</p>}
-        </div>
-        <StatusBadge status={session.status} className="shrink-0 self-start sm:mt-1" />
-      </div>
+      <PageHeader
+        backHref="/student/sessions"
+        backLabel="Back to sessions"
+        title={session.topic}
+        subtitle={tutor ? `with ${tutor.full_name}` : undefined}
+        actions={<StatusBadge status={session.status} className="shrink-0" />}
+      />
 
       {/* Meta */}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -155,7 +146,7 @@ export default async function StudentSessionDetailPage({
       {review ? (
         <section className="mt-8" aria-labelledby="review-heading">
           <h2 id="review-heading" className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
-            <Sparkles className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
+            <Sparkles className="h-4 w-4 text-ai" strokeWidth={1.75} aria-hidden="true" />
             Session review
           </h2>
           <div className="card divide-y divide-border overflow-hidden">

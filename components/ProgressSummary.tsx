@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Loader2, RefreshCw, Sparkles } from "lucide-react";
+import Alert from "./Alert";
+import Skeleton from "./Skeleton";
 
 export default function ProgressSummary({ studentId }: { studentId: string }) {
   const [summary, setSummary] = useState<string | null>(null);
@@ -50,12 +52,7 @@ export default function ProgressSummary({ studentId }: { studentId: string }) {
           ))}
       </div>
 
-      {error && (
-        <div className="alert alert-error mt-4" role="alert">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>{error}</span>
-        </div>
-      )}
+      {error && <Alert className="mt-4">{error}</Alert>}
 
       {loading && (
         <div className="mt-5" aria-live="polite">
@@ -64,9 +61,9 @@ export default function ProgressSummary({ studentId }: { studentId: string }) {
             Analyzing session history…
           </p>
           <div className="mt-4 space-y-2.5" aria-hidden="true">
-            <div className="h-3 w-full animate-pulse rounded bg-surface-muted" />
-            <div className="h-3 w-11/12 animate-pulse rounded bg-surface-muted" />
-            <div className="h-3 w-4/5 animate-pulse rounded bg-surface-muted" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-11/12" />
+            <Skeleton className="h-3 w-4/5" />
           </div>
         </div>
       )}

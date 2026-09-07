@@ -4,6 +4,8 @@ import Link from "next/link";
 import { CheckCircle2, ClipboardList } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import HomeworkToggle from "@/components/HomeworkToggle";
+import PageHeader from "@/components/PageHeader";
+import SectionHeader from "@/components/SectionHeader";
 
 interface HomeworkRow {
   id: string;
@@ -54,7 +56,7 @@ export default async function StudentHomeworkPage() {
         <HomeworkToggle id={hw.id} description={hw.description} completed={hw.completed} />
         <div className="min-w-0 flex-1">
           <p
-            className={`text-sm leading-relaxed ${
+            className={`text-[15px] leading-relaxed ${
               hw.completed ? "text-muted line-through" : "text-foreground"
             }`}
           >
@@ -86,14 +88,14 @@ export default async function StudentHomeworkPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div>
-        <h1 className="page-title">Homework</h1>
-        <p className="mt-1 text-sm text-muted">
-          {rows.length === 0
+      <PageHeader
+        title="Homework"
+        subtitle={
+          rows.length === 0
             ? "Tasks from your reviewed sessions"
-            : `${pending.length} to do · ${done.length} completed`}
-        </p>
-      </div>
+            : `${pending.length} to do · ${done.length} completed`
+        }
+      />
 
       {rows.length === 0 ? (
         <div className="mt-8">
@@ -107,25 +109,33 @@ export default async function StudentHomeworkPage() {
         <div className="mt-8 space-y-8">
           {pending.length > 0 && (
             <section aria-labelledby="pending-heading">
-              <h2 id="pending-heading" className="mb-3 text-sm font-semibold text-foreground">
-                To do
-                <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
-                  {pending.length}
-                </span>
-              </h2>
+              <SectionHeader
+                id="pending-heading"
+                title="To do"
+                count={pending.length}
+                className="mb-3"
+              />
               <ul className="card divide-y divide-border overflow-hidden">{pending.map(renderItem)}</ul>
             </section>
           )}
 
           {done.length > 0 && (
             <section aria-labelledby="done-heading">
-              <h2 id="done-heading" className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.75} aria-hidden="true" />
-                Completed
-                <span className="ml-1 rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
-                  {done.length}
-                </span>
-              </h2>
+              <SectionHeader
+                id="done-heading"
+                title={
+                  <span className="inline-flex items-center gap-1.5">
+                    <CheckCircle2
+                      className="h-4 w-4 text-success"
+                      strokeWidth={1.75}
+                      aria-hidden="true"
+                    />
+                    Completed
+                  </span>
+                }
+                count={done.length}
+                className="mb-3"
+              />
               <ul className="card divide-y divide-border overflow-hidden">{done.map(renderItem)}</ul>
             </section>
           )}

@@ -17,6 +17,10 @@ import {
   Target,
   TrendingDown,
 } from "lucide-react";
+import { formatDateLine, formatTimeRange } from "@/lib/format";
+import Alert from "./Alert";
+import Avatar from "./Avatar";
+import Skeleton from "./Skeleton";
 import StatusBadge from "./StatusBadge";
 
 interface SessionPlan {
@@ -75,27 +79,6 @@ function hwText(item: HomeworkItem | string): string {
 
 function indexLabel(i: number) {
   return String(i + 1).padStart(2, "0");
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function formatTimeRange(startIso: string, endIso?: string) {
-  const start = new Date(startIso).toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  if (!endIso) return start;
-  const end = new Date(endIso).toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  return `${start} – ${end}`;
 }
 
 export default function SessionActions({
@@ -266,16 +249,11 @@ export default function SessionActions({
     }
   }
 
-  const scheduleRange = `${formatDate(startAt)} · ${formatTimeRange(startAt, endAt)}`;
+  const scheduleRange = `${formatDateLine(startAt)} · ${formatTimeRange(startAt, endAt)}`;
 
   return (
     <div className="mt-6">
-      {error && (
-        <div className="alert alert-error mb-5" role="alert">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>{error}</span>
-        </div>
-      )}
+      {error && <Alert className="mb-5">{error}</Alert>}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
         {/* ================= Main column ================= */}
@@ -316,7 +294,7 @@ export default function SessionActions({
 
           {/* Notes */}
           {isEditable ? (
-            <div className="card overflow-hidden focus-within:ring-2 focus-within:ring-accent/30">
+            <div className="card overflow-hidden focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/30">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-muted/30 px-5 py-3.5">
                 <label htmlFor="live-notes" className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <FileText className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
@@ -380,12 +358,12 @@ export default function SessionActions({
           {/* AI Lesson Plan */}
           <section className="card overflow-hidden" aria-labelledby="plan-heading">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
-              <p id="plan-heading" className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <h2 id="plan-heading" className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <span className="flex h-6 w-6 items-center justify-center rounded-md bg-ai-light">
                   <Sparkles className="h-3.5 w-3.5 text-ai" strokeWidth={1.75} aria-hidden="true" />
                 </span>
                 AI lesson plan
-              </p>
+              </h2>
               {planLoading && (
                 <span className="flex items-center gap-2 text-xs text-muted">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -403,9 +381,9 @@ export default function SessionActions({
             {planLoading ? (
               <div className="px-5 py-6" aria-live="polite">
                 <div className="space-y-2.5">
-                  <div className="h-3 w-2/3 animate-pulse rounded bg-surface-muted" />
-                  <div className="h-3 w-11/12 animate-pulse rounded bg-surface-muted" />
-                  <div className="h-3 w-3/4 animate-pulse rounded bg-surface-muted" />
+                  <Skeleton className="h-3 w-2/3" />
+                  <Skeleton className="h-3 w-11/12" />
+                  <Skeleton className="h-3 w-3/4" />
                 </div>
                 <p className="mt-4 text-xs text-muted">
                   Planning for {student.name}… this usually takes a few seconds.
@@ -484,12 +462,12 @@ export default function SessionActions({
           {isFinished && (
             <section className="card overflow-hidden" aria-labelledby="review-heading">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
-                <p id="review-heading" className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <h2 id="review-heading" className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <span className="flex h-6 w-6 items-center justify-center rounded-md bg-ai-light">
                     <Sparkles className="h-3.5 w-3.5 text-ai" strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   Session review
-                </p>
+                </h2>
                 {reviewLoading && (
                   <span className="flex items-center gap-2 text-xs text-muted">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -507,9 +485,9 @@ export default function SessionActions({
               {reviewLoading ? (
                 <div className="px-5 py-6" aria-live="polite">
                   <div className="space-y-2.5">
-                    <div className="h-3 w-3/4 animate-pulse rounded bg-surface-muted" />
-                    <div className="h-3 w-11/12 animate-pulse rounded bg-surface-muted" />
-                    <div className="h-3 w-2/5 animate-pulse rounded bg-surface-muted" />
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-3 w-11/12" />
+                    <Skeleton className="h-3 w-2/5" />
                   </div>
                   <p className="mt-4 text-xs text-muted">
                     Summarizing the session for {student.name}… this usually takes a few seconds.
@@ -575,17 +553,7 @@ export default function SessionActions({
           {/* Student */}
           <div className="card p-4">
             <div className="flex items-center gap-3">
-              <span
-                aria-hidden="true"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-light text-sm font-semibold text-accent-strong"
-              >
-                {student.name
-                  .split(/\s+/)
-                  .filter(Boolean)
-                  .slice(0, 2)
-                  .map((p) => p[0]?.toUpperCase() ?? "")
-                  .join("")}
-              </span>
+              <Avatar name={student.name} size="md" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-foreground">{student.name}</p>
                 <p className="truncate text-xs text-muted">
@@ -653,7 +621,7 @@ export default function SessionActions({
                         <p className="truncate text-xs font-medium text-foreground">{s.topic}</p>
                         <StatusBadge status={s.status} className="shrink-0" />
                       </div>
-                      <p className="mt-1 text-[11px] text-muted">{formatDate(s.start_at)}</p>
+                      <p className="mt-1 text-[11px] text-muted">{formatDateLine(s.start_at)}</p>
                       {s.summary && (
                         <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-strong">
                           {s.summary}

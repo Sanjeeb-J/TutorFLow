@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   CalendarDays,
+  Check,
+  ChevronDown,
   ClipboardList,
   LayoutDashboard,
   LogOut,
@@ -16,6 +18,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { UserProfile } from "@/lib/supabase/auth";
+import { THEMES } from "@/lib/theme/config";
+import Avatar from "./Avatar";
+import { useTheme } from "./ThemeProvider";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
 
@@ -33,14 +38,8 @@ const NAV_ITEMS: Record<"tutor" | "student", NavItem[]> = {
   ],
 };
 
-function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export default function AppNav({
   role,
@@ -51,21 +50,168 @@ export default function AppNav({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
+
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  // Close the account menu when the route changes (derived state during
+  // render — the standard React pattern for resetting state on prop change).
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setAccountOpen(false);
+  }
+
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const drawerRef = useRef<HTMLElement | null>(null);
+  const accountTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const desktopAccountRef = useRef<HTMLDivElement | null>(null);
+  const mobileAccountRef = useRef<HTMLDivElement | null>(null);
+  const desktopPanelRef = useRef<HTMLDivElement | null>(null);
+  const mobilePanelRef = useRef<HTMLDivElement | null>(null);
 
   const items = NAV_ITEMS[role];
   const root = `/${role}`;
 
-  // Close the drawer with Escape while it is open
+  function isActive(item: NavItem) {
+    return item.href === root ? pathname === root : pathname.startsWith(item.href);
+  }
+
+  /** Close the mobile drawer and return focus to the menu trigger. */
+  const closeMobile = useCallback(() => {
+    const focusInsideDrawer =
+      drawerRef.current?.contains(document.activeElement) ?? false;
+    setMobileOpen(false);
+    if (focusInsideDrawer) menuButtonRef.current?.focus();
+  }, []);
+
+  /** Close the account menu and return focus to whichever trigger opened it. */
+  const closeAccount = useCallback(() => {
+    setAccountOpen(false);
+    if (accountTriggerRef.current) accountTriggerRef.current.focus();
+  }, []);
+
+  const openAccount = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    accountTriggerRef.current = e.currentTarget;
+    setMobileOpen(false);
+    setAccountOpen(true);
+  }, []);
+
+  const toggleMobile = useCallback(() => {
+    setAccountOpen(false);
+    setMobileOpen((open) => !open);
+  }, []);
+
+  // Move focus into the account panel when it opens.
   useEffect(() => {
-    if (!mobileOpen) return;
+    if (!accountOpen) return;
+    const visible = desktopPanelRef.current?.offsetParent
+      ? desktopPanelRef.current
+      : mobilePanelRef.current;
+    visible?.focus({ preventScroll: true });
+  }, [accountOpen]);
+
+  // Move focus to the drawer's close control when it opens.
+  useEffect(() => {
+    if (mobileOpen) closeButtonRef.current?.focus();
+  }, [mobileOpen]);
+
+  // Close the account menu on Escape.
+  useEffect(() => {
+    if (!accountOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileOpen(false);
+      if (e.key === "Escape") closeAccount();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, [accountOpen, closeAccount]);
+
+  // Close the account menu on outside click.
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      const inside =
+        desktopAccountRef.current?.contains(target) ||
+        mobileAccountRef.current?.contains(target);
+      if (!inside) closeAccount();
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [accountOpen, closeAccount]);
+
+  // Close the drawer on Escape (unless the account menu is handling it).
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !accountOpen) closeMobile();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen, accountOpen, closeMobile]);
+
+  // Prevent page scrolling while the drawer is open.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
   }, [mobileOpen]);
+
+  // Keep Tab focus inside the drawer while it is open.
+  const handleDrawerKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLElement>) => {
+      if (e.key !== "Tab") return;
+      const drawer = drawerRef.current;
+      if (!drawer) return;
+      const focusables = Array.from(
+        drawer.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter((el) => el.offsetParent !== null);
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey) {
+        if (active === first || !drawer.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    },
+    [],
+  );
+
+  // Arrow-key navigation inside the account menu (menu pattern).
+  const handleAccountMenuKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const panel = e.currentTarget;
+      const items = Array.from(
+        panel.querySelectorAll<HTMLButtonElement>('button[role="menuitem"], button[role="menuitemradio"]'),
+      );
+      if (items.length === 0) return;
+      const index = items.indexOf(document.activeElement as HTMLButtonElement);
+
+      const focusAt = (next: number) => {
+        e.preventDefault();
+        items[next]?.focus();
+      };
+
+      if (e.key === "ArrowDown") focusAt(index < 0 ? 0 : (index + 1) % items.length);
+      else if (e.key === "ArrowUp")
+        focusAt(index <= 0 ? items.length - 1 : index - 1);
+      else if (e.key === "Home") focusAt(0);
+      else if (e.key === "End") focusAt(items.length - 1);
+    },
+    [],
+  );
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -76,13 +222,12 @@ export default function AppNav({
     }
   }
 
-  function isActive(item: NavItem) {
-    return item.href === root ? pathname === root : pathname.startsWith(item.href);
-  }
-
   const brand = (
     <div className="flex items-center gap-2.5">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-light">
+      <span
+        aria-hidden="true"
+        className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-light"
+      >
         <BookOpen className="h-4 w-4 text-accent" strokeWidth={2} aria-hidden="true" />
       </span>
       <span className="text-[15px] font-semibold tracking-tight text-foreground">
@@ -91,83 +236,147 @@ export default function AppNav({
     </div>
   );
 
-  const nav = (
-    <nav aria-label="Main" className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+  const navList = (
+    <ul className="space-y-0.5">
       {items.map((item) => {
         const Icon = item.icon;
         const active = isActive(item);
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setMobileOpen(false)}
-            aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-              active
-                ? "bg-accent-light font-medium text-accent-strong"
-                : "text-muted-strong hover:bg-surface-muted hover:text-foreground"
-            }`}
-          >
-            <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2 : 1.75} aria-hidden="true" />
-            {item.label}
-          </Link>
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              onClick={closeMobile}
+              aria-current={active ? "page" : undefined}
+              className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] ${
+                active
+                  ? "bg-accent-light font-medium text-accent-strong"
+                  : "text-muted-strong hover:bg-surface-muted hover:text-foreground"
+              }`}
+            >
+              {active && (
+                <span
+                  aria-hidden="true"
+                  className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent"
+                />
+              )}
+              <Icon
+                className="h-4 w-4 shrink-0"
+                strokeWidth={active ? 2 : 1.75}
+                aria-hidden="true"
+              />
+              {item.label}
+            </Link>
+          </li>
         );
       })}
+    </ul>
+  );
+
+  const nav = (
+    <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-4">
+      {navList}
     </nav>
   );
 
-  const sidebarFooter = (
-    <div className="border-t border-border px-3 py-3">
-      <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-        <span
-          aria-hidden="true"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white"
-        >
-          {getInitials(profile.full_name)}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">
-            {profile.full_name}
-          </p>
-          <p className="truncate text-xs capitalize text-muted">{role}</p>
-        </div>
+  /** Identity block inside the account menu. */
+  const accountIdentity = (
+    <div className="flex items-center gap-3 border-b border-border px-3 py-3">
+      <Avatar name={profile.full_name} size="md" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-foreground">
+          {profile.full_name}
+        </p>
+        <p className="truncate text-xs capitalize text-muted">{role}</p>
       </div>
-      <button
-        onClick={handleLogout}
-        disabled={loggingOut}
-        className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-muted-strong transition-colors hover:bg-surface-muted hover:text-foreground disabled:opacity-60"
-      >
-        <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-        {loggingOut ? "Signing out…" : "Sign out"}
-      </button>
     </div>
   );
 
-  const sidebarBody = (
+  /** Theme picker rows rendered from the Stage 1 theme config. */
+  const themeOptions = (
+    <ul className="px-1.5 pb-1.5">
+      {THEMES.map((t) => {
+        const selected = theme === t.id;
+        return (
+          <li key={t.id}>
+            <button
+              type="button"
+              role="menuitemradio"
+              aria-checked={selected}
+              onClick={() => setTheme(t.id)}
+              className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] ${
+                selected
+                  ? "bg-accent-light font-medium text-accent-strong"
+                  : "text-muted-strong hover:bg-surface-muted hover:text-foreground"
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0 rounded-full border border-border-strong"
+                style={{ backgroundColor: t.swatch }}
+              />
+              <span className="flex-1 text-left">{t.label}</span>
+              {selected && (
+                <Check className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+              )}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+
+  const signOutItem = (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={handleLogout}
+      disabled={loggingOut}
+      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground disabled:opacity-60"
+    >
+      <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+      {loggingOut ? "Signing out…" : "Sign out"}
+    </button>
+  );
+
+  /** Popover body shared by the desktop and mobile account menus. */
+  const accountMenuBody = (
     <>
-      <div className="flex h-16 shrink-0 items-center border-b border-border px-5">
-        {brand}
+      {accountIdentity}
+      <div className="px-3 pb-1 pt-3">
+        <p className="caption">Theme</p>
       </div>
-      {nav}
-      {sidebarFooter}
+      {themeOptions}
+      <div className="border-t border-border p-1.5">{signOutItem}</div>
     </>
   );
+
+  const accountTriggerBase =
+    "rounded-md text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground";
 
   return (
     <>
       {/* Mobile top bar */}
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-surface px-4 lg:hidden">
+      <header className="glass-surface fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-glass-border px-4 lg:hidden">
         {brand}
-        <div className="flex items-center gap-3">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-white" aria-hidden="true">
-            {getInitials(profile.full_name)}
-          </span>
+        <div className="relative flex items-center gap-1.5" ref={mobileAccountRef}>
           <button
-            onClick={() => setMobileOpen(!mobileOpen)}
+            type="button"
+            onClick={openAccount}
+            aria-haspopup="menu"
+            aria-expanded={accountOpen}
+            aria-controls="account-menu-mobile"
+            aria-label={`Account menu for ${profile.full_name}`}
+            className={accountTriggerBase}
+          >
+            <Avatar name={profile.full_name} size="xs" />
+          </button>
+          <button
+            ref={menuButtonRef}
+            onClick={toggleMobile}
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            className="rounded-md p-1.5 text-muted-strong transition-colors hover:bg-surface-muted hover:text-foreground"
+            className={accountTriggerBase}
           >
             {mobileOpen ? (
               <X className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
@@ -175,32 +384,131 @@ export default function AppNav({
               <Menu className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
             )}
           </button>
+
+          {accountOpen && (
+            <div
+              ref={mobilePanelRef}
+              id="account-menu-mobile"
+              role="menu"
+              aria-label="Account menu"
+              tabIndex={-1}
+              onKeyDown={handleAccountMenuKeyDown}
+              className="surface-popover absolute right-0 top-full z-50 mt-2 max-h-[min(26rem,calc(100vh-5rem))] w-60 overflow-y-auto"
+            >
+              {accountMenuBody}
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Mobile drawer overlay */}
+      {/* Mobile drawer overlay — sits below the top bar so the header
+          (account avatar + menu trigger) stays crisp and interactive. */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/30 lg:hidden"
-          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          onClick={closeMobile}
           aria-hidden="true"
         />
       )}
 
       {/* Mobile drawer */}
       <aside
+        ref={drawerRef}
         id="mobile-nav"
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-surface shadow-xl transition-transform duration-200 lg:hidden ${
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile navigation"
+        inert={!mobileOpen}
+        onKeyDown={handleDrawerKeyDown}
+        className={`glass-surface fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-glass-border shadow-xl transition-transform duration-[var(--duration-normal)] ease-[var(--ease-standard)] lg:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        aria-label="Mobile navigation"
       >
-        {sidebarBody}
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-glass-border px-5">
+          {brand}
+          <button
+            ref={closeButtonRef}
+            onClick={closeMobile}
+            aria-label="Close menu"
+            className="rounded-md p-1.5 text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground lg:hidden"
+          >
+            <X className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        </div>
+        {nav}
+        {/* Static identity + sign out inside the drawer (unchanged). */}
+        <div className="border-t border-glass-border px-3 py-3">
+          <div className="flex items-center gap-3 rounded-xl bg-surface-muted/60 px-2.5 py-2.5">
+            <Avatar name={profile.full_name} size="sm" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-foreground">
+                {profile.full_name}
+              </p>
+              <p className="truncate text-xs capitalize text-muted">{role}</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground disabled:opacity-60"
+          >
+            <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            {loggingOut ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border bg-surface lg:flex">
-        {sidebarBody}
+      <aside className="glass-surface fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-glass-border lg:flex">
+        <div className="flex h-16 shrink-0 items-center border-b border-glass-border px-5">
+          {brand}
+        </div>
+        {nav}
+
+        <div className="border-t border-glass-border p-3">
+          <div className="relative" ref={desktopAccountRef}>
+            <button
+              type="button"
+              onClick={openAccount}
+              aria-haspopup="menu"
+              aria-expanded={accountOpen}
+              aria-controls="account-menu-desktop"
+              aria-label={`Account menu for ${profile.full_name}`}
+              className="flex w-full items-center gap-3 rounded-xl bg-surface-muted/60 px-2.5 py-2.5 text-left transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted"
+            >
+              <Avatar name={profile.full_name} size="sm" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-foreground">
+                  {profile.full_name}
+                </span>
+                <span className="block truncate text-xs capitalize text-muted">
+                  {role}
+                </span>
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-muted transition-transform duration-[var(--duration-normal)] ease-[var(--ease-standard)] ${
+                  accountOpen ? "rotate-180" : ""
+                }`}
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
+            </button>
+
+            {accountOpen && (
+              <div
+                ref={desktopPanelRef}
+                id="account-menu-desktop"
+                role="menu"
+                aria-label="Account menu"
+                tabIndex={-1}
+                onKeyDown={handleAccountMenuKeyDown}
+                className="surface-popover absolute bottom-full left-0 z-50 mb-2 max-h-[min(26rem,calc(100vh-4rem))] w-60 overflow-y-auto"
+              >
+                {accountMenuBody}
+              </div>
+            )}
+          </div>
+        </div>
       </aside>
     </>
   );

@@ -9,7 +9,10 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
+import SectionHeader from "@/components/SectionHeader";
 import SessionRow from "@/components/SessionRow";
+import StatCard from "@/components/StatCard";
 import EmptyState from "@/components/EmptyState";
 
 type SessionLike = {
@@ -119,71 +122,59 @@ export default async function TutorPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="page-title">
-            {greetingFor(new Date().getHours())}, {firstName}
-          </h1>
-          <p className="mt-1 text-sm text-muted">
-            Here&apos;s what&apos;s happening across your tutoring sessions.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Link href="/tutor/students/new" className="btn btn-secondary">
-            <UserPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-            Add student
-          </Link>
-          <Link href="/tutor/sessions/new" className="btn btn-primary">
-            <CalendarPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-            Schedule session
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title={<>{greetingFor(new Date().getHours())}, {firstName}</>}
+        subtitle="Here's what's happening across your tutoring sessions."
+        actions={
+          <>
+            <Link href="/tutor/students/new" className="btn btn-secondary">
+              <UserPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+              Add student
+            </Link>
+            <Link href="/tutor/sessions/new" className="btn btn-primary">
+              <CalendarPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+              Schedule session
+            </Link>
+          </>
+        }
+      />
 
       {/* Summary metrics */}
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {metrics.map((m) => {
-          const Icon = m.icon;
-          return (
-            <div key={m.label} className="card p-4">
-              <div className="flex items-center gap-1.5 text-muted">
-                <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                <p className="text-xs font-medium uppercase tracking-wide">
-                  {m.label}
-                </p>
-              </div>
-              <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-                {m.value}
-              </p>
-              {m.helper && <p className="mt-1 text-xs text-muted">{m.helper}</p>}
-            </div>
-          );
-        })}
+        {metrics.map((m) => (
+          <StatCard
+            key={m.label}
+            icon={m.icon}
+            label={m.label}
+            value={m.value}
+            helper={m.helper}
+          />
+        ))}
       </div>
 
       {/* Upcoming sessions */}
       <section className="mt-10" aria-labelledby="upcoming-heading">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h2 id="upcoming-heading" className="text-base font-semibold text-foreground">
-              Upcoming sessions
-            </h2>
-            <p className="mt-0.5 text-sm text-muted">
-              {upcomingCount && upcomingCount > 0
-                ? `${upcomingCount} session${upcomingCount === 1 ? "" : "s"} on your calendar`
-                : "Nothing scheduled ahead"}
-            </p>
-          </div>
-          <Link
-            href="/tutor/sessions"
-            className="shrink-0 text-sm font-medium text-accent transition-colors hover:text-accent-strong"
-          >
-            View all
-          </Link>
-        </div>
+        <SectionHeader
+          id="upcoming-heading"
+          title="Upcoming sessions"
+          description={
+            upcomingCount && upcomingCount > 0
+              ? `${upcomingCount} session${upcomingCount === 1 ? "" : "s"} on your calendar`
+              : "Nothing scheduled ahead"
+          }
+          action={
+            <Link
+              href="/tutor/sessions"
+              className="text-sm font-medium text-accent transition-colors hover:text-accent-strong"
+            >
+              View all
+            </Link>
+          }
+          className="mb-4"
+        />
 
         {upcomingSessions && upcomingSessions.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {upcomingSessions.map((s) => (
               <SessionRow
                 key={s.id}
@@ -214,17 +205,15 @@ export default async function TutorPage() {
 
       {/* Recent sessions */}
       <section className="mt-10" aria-labelledby="recent-heading">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h2 id="recent-heading" className="text-base font-semibold text-foreground">
-              Recent sessions
-            </h2>
-            <p className="mt-0.5 text-sm text-muted">Your latest completed work</p>
-          </div>
-        </div>
+        <SectionHeader
+          id="recent-heading"
+          title="Recent sessions"
+          description="Your latest completed work"
+          className="mb-4"
+        />
 
         {recentSessions && recentSessions.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {recentSessions.map((s) => (
               <SessionRow
                 key={s.id}

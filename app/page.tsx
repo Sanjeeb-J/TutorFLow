@@ -15,7 +15,10 @@ export default async function Home() {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-20 min-h-screen bg-background">
       <div className="flex flex-col items-center text-center max-w-md">
-        <span className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent-light mb-6">
+        <span
+          className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent-light mb-6"
+          aria-hidden="true"
+        >
           <BookOpen className="w-7 h-7 text-accent" strokeWidth={1.75} />
         </span>
 
@@ -28,7 +31,7 @@ export default async function Home() {
           and track progress in one calm, organized place.
         </p>
 
-        <a href="/login" className="btn btn-primary mt-8 btn-lg">
+        <a href="/login" className="btn btn-primary btn-lg mt-8 min-h-11">
           Sign in
         </a>
       </div>

@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil } from "lucide-react";
+import Alert from "@/components/Alert";
 import EmptyState from "@/components/EmptyState";
+import PageHeader from "@/components/PageHeader";
 
 interface Student {
   id: string;
@@ -128,26 +130,15 @@ export default function EditStudentPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link
-        href={`/tutor/students/${id}`}
-        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-        Back to {student.name}
-      </Link>
-
-      <div className="mt-4">
-        <h1 className="page-title">Edit student</h1>
-        <p className="mt-1 text-sm text-muted">Update profile details for {student.name}.</p>
-      </div>
+      <PageHeader
+        backHref={`/tutor/students/${id}`}
+        backLabel={`Back to ${student.name}`}
+        title="Edit student"
+        subtitle={`Update profile details for ${student.name}.`}
+      />
 
       <form onSubmit={handleSubmit} className="card mt-6 p-6">
-        {error && (
-          <div className="alert alert-error mb-5" role="alert">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{error}</span>
-          </div>
-        )}
+        {error && <Alert className="mb-5">{error}</Alert>}
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div className="field sm:col-span-2">

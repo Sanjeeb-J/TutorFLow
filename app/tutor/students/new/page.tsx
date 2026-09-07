@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, CheckCircle2, KeyRound, UserPlus } from "lucide-react";
+import { CheckCircle2, KeyRound, UserPlus } from "lucide-react";
+import Alert from "@/components/Alert";
+import PageHeader from "@/components/PageHeader";
 
 export default function NewStudentPage() {
   const [loading, setLoading] = useState(false);
@@ -140,28 +142,15 @@ export default function NewStudentPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link
-        href="/tutor/students"
-        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-        Back to students
-      </Link>
-
-      <div className="mt-4">
-        <h1 className="page-title">Add student</h1>
-        <p className="mt-1 text-sm text-muted">
-          Create a profile for a new student and set up their login account.
-        </p>
-      </div>
+      <PageHeader
+        backHref="/tutor/students"
+        backLabel="Back to students"
+        title="Add student"
+        subtitle="Create a profile for a new student and set up their login account."
+      />
 
       <form onSubmit={handleSubmit} noValidate className="card mt-6 p-6">
-        {error && (
-          <div className="alert alert-error mb-5" role="alert">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{error}</span>
-          </div>
-        )}
+        {error && <Alert className="mb-5">{error}</Alert>}
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div className="field sm:col-span-2">

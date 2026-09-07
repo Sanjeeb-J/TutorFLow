@@ -8,10 +8,12 @@ import {
   CheckCircle2,
   ClipboardList,
 } from "lucide-react";
-import StatusBadge from "@/components/StatusBadge";
-import SessionRow from "@/components/SessionRow";
 import EmptyState from "@/components/EmptyState";
 import HomeworkToggle from "@/components/HomeworkToggle";
+import PageHeader from "@/components/PageHeader";
+import SectionHeader from "@/components/SectionHeader";
+import SessionRow from "@/components/SessionRow";
+import StatusBadge from "@/components/StatusBadge";
 
 interface HomeworkRow {
   id: string;
@@ -92,28 +94,35 @@ export default async function StudentDashboard() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="page-title">Welcome back, {profile?.full_name?.split(/\s+/)[0]}</h1>
-      <p className="mt-1 text-sm text-muted">
-        {student?.subject ?? "Tutoring"}
-        {student?.current_level ? ` · ${student.current_level}` : ""}
-      </p>
+      <PageHeader
+        title={"Welcome back, " + (profile?.full_name?.split(/\s+/)[0] ?? "")}
+        subtitle={
+          <>
+            {student?.subject ?? "Tutoring"}
+            {student?.current_level ? ` · ${student.current_level}` : ""}
+          </>
+        }
+      />
 
       {/* Next session */}
       <section className="mt-8" aria-labelledby="next-heading">
         <h2 id="next-heading" className="section-kicker mb-3">Next session</h2>
         {next ? (
           <div className="card flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex flex-col items-center rounded-lg border border-border bg-surface-muted px-3.5 py-2.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+            <div className="flex min-w-0 items-start gap-4">
+              <div className="flex w-14 shrink-0 flex-col items-center rounded-lg border border-border-subtle bg-surface-muted/70 py-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
                   {new Date(next.start_at).toLocaleDateString(undefined, { month: "short" })}
                 </span>
-                <span className="text-xl font-semibold text-foreground">
+                <span className="text-lg font-semibold tabular-nums leading-6 text-foreground">
                   {new Date(next.start_at).toLocaleDateString(undefined, { day: "numeric" })}
+                </span>
+                <span className="text-[10px] text-muted">
+                  {new Date(next.start_at).toLocaleDateString(undefined, { weekday: "short" })}
                 </span>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">{next.topic}</p>
+                <p className="truncate text-[15px] font-semibold text-foreground">{next.topic}</p>
                 <p className="mt-1 text-sm text-muted">
                   {new Date(next.start_at).toLocaleDateString(undefined, {
                     weekday: "long",
@@ -132,7 +141,7 @@ export default async function StudentDashboard() {
                 {nextTutor && <p className="mt-1 text-sm text-muted">with {nextTutor}</p>}
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex shrink-0 flex-wrap items-center gap-3">
               <StatusBadge status={next.status} />
               <Link
                 href={`/student/sessions/${next.id}`}
@@ -153,19 +162,26 @@ export default async function StudentDashboard() {
 
       {/* Homework */}
       <section className="mt-10" aria-labelledby="homework-heading">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="homework-heading" className="section-kicker">
-            Homework
-            {pendingCount && pendingCount > 0 ? ` · ${pendingCount} pending` : ""}
-          </h2>
-          <Link
-            href="/student/homework"
-            className="flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent-strong"
-          >
-            View all
-            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-          </Link>
-        </div>
+        <SectionHeader
+          id="homework-heading"
+          kicker
+          title={
+            <>
+              Homework
+              {pendingCount && pendingCount > 0 ? ` · ${pendingCount} pending` : ""}
+            </>
+          }
+          action={
+            <Link
+              href="/student/homework"
+              className="flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent-strong"
+            >
+              View all
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+            </Link>
+          }
+          className="mb-3"
+        />
 
         {homework && homework.length > 0 ? (
           <div className="card divide-y divide-border overflow-hidden">
@@ -176,7 +192,7 @@ export default async function StudentDashboard() {
                 <div key={hw.id} className="flex items-start gap-3.5 px-4 py-3.5">
                   <HomeworkToggle id={hw.id} description={hw.description} completed={hw.completed} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-foreground">{hw.description}</p>
+                    <p className="text-[15px] leading-relaxed text-foreground">{hw.description}</p>
                     <p className="mt-0.5 text-xs text-muted">
                       {topic ? `From ${topic} · ` : ""}
                       Assigned{" "}
@@ -201,16 +217,21 @@ export default async function StudentDashboard() {
 
       {/* Recent sessions */}
       <section className="mt-10" aria-labelledby="recent-heading">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="recent-heading" className="section-kicker">Recent sessions</h2>
-          <Link
-            href="/student/sessions"
-            className="flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent-strong"
-          >
-            View all
-            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-          </Link>
-        </div>
+        <SectionHeader
+          id="recent-heading"
+          kicker
+          title="Recent sessions"
+          action={
+            <Link
+              href="/student/sessions"
+              className="flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent-strong"
+            >
+              View all
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+            </Link>
+          }
+          className="mb-3"
+        />
 
         {recent && recent.length > 0 ? (
           <div className="space-y-2.5">
@@ -240,10 +261,10 @@ export default async function StudentDashboard() {
       </section>
 
       {/* Reference to progress page */}
-      <div className="mt-10 text-center">
+      <div className="mt-12 text-center">
         <Link
           href="/student/progress"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-strong transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-strong transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-surface-muted hover:text-foreground"
         >
           <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           See your learning history & progress

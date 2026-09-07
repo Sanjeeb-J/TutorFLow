@@ -2,6 +2,7 @@ import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
 import StudentsManager, {
   type NextSessionInfo,
   type StudentSummary,
@@ -38,20 +39,20 @@ export default async function StudentsPage() {
 
   return (
     <div>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="page-title">Students</h1>
-          <p className="mt-1 text-sm text-muted">
-            {count === 0
-              ? "Manage the students you tutor"
-              : `${count} student${count === 1 ? "" : "s"} on your roster`}
-          </p>
-        </div>
-        <Link href="/tutor/students/new" className="btn btn-primary self-start sm:self-auto">
-          <Plus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-          Add Student
-        </Link>
-      </div>
+      <PageHeader
+        title="Students"
+        subtitle={
+          count === 0
+            ? "Manage the students you tutor"
+            : `${count} student${count === 1 ? "" : "s"} on your roster`
+        }
+        actions={
+          <Link href="/tutor/students/new" className="btn btn-primary">
+            <Plus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            Add Student
+          </Link>
+        }
+      />
 
       <div className="mt-8">
         <StudentsManager

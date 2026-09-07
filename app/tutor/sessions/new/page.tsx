@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, CalendarPlus, Loader2, UserPlus } from "lucide-react";
+import { CalendarPlus, Loader2, UserPlus } from "lucide-react";
+import Alert from "@/components/Alert";
 import EmptyState from "@/components/EmptyState";
+import PageHeader from "@/components/PageHeader";
 
 interface Student {
   id: string;
@@ -94,20 +96,12 @@ export default function NewSessionPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link
-        href="/tutor/sessions"
-        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-        Back to sessions
-      </Link>
-
-      <div className="mt-4">
-        <h1 className="page-title">Schedule session</h1>
-        <p className="mt-1 text-sm text-muted">
-          Sessions with overlapping times are blocked automatically.
-        </p>
-      </div>
+      <PageHeader
+        backHref="/tutor/sessions"
+        backLabel="Back to sessions"
+        title="Schedule session"
+        subtitle="Sessions with overlapping times are blocked automatically."
+      />
 
       {students.length === 0 ? (
         <div className="mt-6">
@@ -125,12 +119,7 @@ export default function NewSessionPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="card mt-6 p-6">
-          {error && (
-            <div className="alert alert-error mb-5" role="alert">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>{error}</span>
-            </div>
-          )}
+          {error && <Alert className="mb-5">{error}</Alert>}
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div className="field sm:col-span-2">
