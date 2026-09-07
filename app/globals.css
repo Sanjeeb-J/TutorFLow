@@ -110,87 +110,6 @@
    ============================================================ */
 
 /* ------------------------------------------------------------
-   INDIGO — focused, intelligent, academic.
-   Cool indigo-tinted page with an indigo primary.
-   ------------------------------------------------------------ */
-:root[data-theme="indigo"] {
-  --background: #f6f7fd;
-  --surface: #ffffff;
-  --surface-muted: #eceef8;
-  --surface-glass: rgba(255, 255, 255, 0.74);
-  --glass-border: rgba(228, 231, 243, 0.9);
-  --border: #e4e7f3;
-  --border-strong: #d1d6ea;
-  --border-subtle: #eef0f9;
-  --accent: #4f46e5;
-  --accent-strong: #4338ca;
-  --accent-light: #e8ecff;
-  --accent-ring: #c7cdff;
-  --focus-ring: #6366f1;
-  --glow-accent: 0 0 0 1px rgb(79 70 229 / 0.14), 0 8px 24px -8px rgb(79 70 229 / 0.3);
-}
-
-/* ------------------------------------------------------------
-   GREEN — fresh, calm, natural.
-   ------------------------------------------------------------ */
-:root[data-theme="green"] {
-  --background: #f3f9f5;
-  --surface: #ffffff;
-  --surface-muted: #e9f3ec;
-  --surface-glass: rgba(255, 255, 255, 0.74);
-  --glass-border: rgba(221, 235, 225, 0.9);
-  --border: #dfece3;
-  --border-strong: #c7dccc;
-  --border-subtle: #eef7f0;
-  --accent: #059669;
-  --accent-strong: #047857;
-  --accent-light: #e6f5ec;
-  --accent-ring: #6ee7b7;
-  --focus-ring: #059669;
-  --glow-accent: 0 0 0 1px rgb(5 150 105 / 0.14), 0 8px 24px -8px rgb(5 150 105 / 0.3);
-}
-
-/* ------------------------------------------------------------
-   ROSE — warm, friendly, approachable (professional, not playful).
-   ------------------------------------------------------------ */
-:root[data-theme="rose"] {
-  --background: #fdf6f6;
-  --surface: #ffffff;
-  --surface-muted: #f8eaeb;
-  --surface-glass: rgba(255, 255, 255, 0.74);
-  --glass-border: rgba(242, 220, 222, 0.9);
-  --border: #f1dcdd;
-  --border-strong: #e3c2c6;
-  --border-subtle: #faf0f1;
-  --accent: #e11d48;
-  --accent-strong: #be123c;
-  --accent-light: #fdebee;
-  --accent-ring: #fda4af;
-  --focus-ring: #e11d48;
-  --glow-accent: 0 0 0 1px rgb(225 29 72 / 0.14), 0 8px 24px -8px rgb(225 29 72 / 0.28);
-}
-
-/* ------------------------------------------------------------
-   AMBER — warm, energetic, optimistic with excellent contrast.
-   ------------------------------------------------------------ */
-:root[data-theme="amber"] {
-  --background: #fdfaf3;
-  --surface: #ffffff;
-  --surface-muted: #f6f0e3;
-  --surface-glass: rgba(255, 255, 255, 0.74);
-  --glass-border: rgba(240, 231, 212, 0.9);
-  --border: #f0e7d4;
-  --border-strong: #e0d0b0;
-  --border-subtle: #f8f3ea;
-  --accent: #b45309;
-  --accent-strong: #92400e;
-  --accent-light: #fdeeda;
-  --accent-ring: #fcd34d;
-  --focus-ring: #d97706;
-  --glow-accent: 0 0 0 1px rgb(180 83 9 / 0.14), 0 8px 24px -8px rgb(180 83 9 / 0.3);
-}
-
-/* ------------------------------------------------------------
    DARK — premium dark SaaS. Deep navy, never pure black.
    Shadows are tuned differently from light (softer, deeper);
    semantic "strong" colors shift LIGHTER so text on translucent
@@ -582,6 +501,35 @@ body {
     font-variant-numeric: tabular-nums;
     color: var(--foreground);
   }
+}
+
+/* ============================================================
+   Login page — photographic background treatment.
+   The photograph + navy/indigo overlay stack is a fixed brand
+   atmosphere that stays dark in every theme (contrast over the photo
+   is guaranteed). The login panel and form keep using semantic tokens,
+   so the page still responds to the active theme system.
+   ============================================================ */
+.login-shell {
+  background: #0a101f; /* deep navy while the photo loads — no light flash */
+}
+.login-photo {
+  background-image: url("/images/login/tutorflow-login-bg.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.login-overlay {
+  background:
+    radial-gradient(80rem 55rem at 14% 10%, rgb(99 102 241 / 0.16), transparent 55%),
+    radial-gradient(110rem 80rem at 50% 45%, transparent 38%, rgb(10 16 31 / 0.6) 100%),
+    linear-gradient(to right, rgb(10 16 31 / 0.9), rgb(10 16 31 / 0.75) 55%, rgb(10 16 31 / 0.82));
+}
+/* Fixed light text over the photograph (all themes) */
+.login-overlay-text {
+  color: #e6edf7;
+}
+.login-overlay-muted {
+  color: rgb(203 213 225 / 0.9);
 }
 
 /* ============================================================

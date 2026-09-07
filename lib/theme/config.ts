@@ -8,7 +8,7 @@
  * (ThemeProvider, future theme picker).
  */
 
-export const THEME_IDS = ["light", "dark", "indigo", "green", "rose", "amber"] as const;
+export const THEME_IDS = ["light", "dark"] as const;
 
 export type ThemeId = (typeof THEME_IDS)[number];
 
@@ -34,30 +34,6 @@ export const THEMES: ThemeMeta[] = [
     label: "Dark",
     description: "Premium dark, easy on the eyes",
     swatch: "#0a101f",
-  },
-  {
-    id: "indigo",
-    label: "Indigo",
-    description: "Focused and intelligent",
-    swatch: "#4f46e5",
-  },
-  {
-    id: "green",
-    label: "Green",
-    description: "Fresh and calm",
-    swatch: "#059669",
-  },
-  {
-    id: "rose",
-    label: "Rose",
-    description: "Warm and approachable",
-    swatch: "#e11d48",
-  },
-  {
-    id: "amber",
-    label: "Amber",
-    description: "Warm and optimistic",
-    swatch: "#b45309",
   },
 ];
 
