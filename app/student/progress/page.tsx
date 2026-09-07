@@ -2,7 +2,10 @@ import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardList, Sparkles, TrendingUp } from "lucide-react";
+import { formatDateLine } from "@/lib/format";
 import EmptyState from "@/components/EmptyState";
+import PageHeader from "@/components/PageHeader";
+import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
 
 interface ReviewedSession {
@@ -25,7 +28,7 @@ export default async function StudentProgressPage() {
   if (!student) {
     return (
       <div className="mx-auto max-w-3xl">
-        <h1 className="page-title">Progress</h1>
+        <PageHeader title="Progress" />
         <div className="mt-8">
           <EmptyState
             icon={TrendingUp}
@@ -62,11 +65,15 @@ export default async function StudentProgressPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="page-title">Progress</h1>
-      <p className="mt-1 text-sm text-muted">
-        {student.name} · {student.subject}
-        {student.current_level ? ` · ${student.current_level}` : ""}
-      </p>
+      <PageHeader
+        title="Progress"
+        subtitle={
+          <>
+            {student.name} · {student.subject}
+            {student.current_level ? ` · ${student.current_level}` : ""}
+          </>
+        }
+      />
 
       {reviewed.length === 0 ? (
         <div className="mt-8">
@@ -80,47 +87,42 @@ export default async function StudentProgressPage() {
         <>
           {/* Overview */}
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="card p-4">
-              <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
-                <BookOpenCheck className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                Reviewed sessions
-              </p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-                {reviewed.length}
-              </p>
-            </div>
-            <div className="card p-4">
-              <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
-                <ClipboardList className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                Homework completed
-              </p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-                {doneCount}
-                <span className="text-base font-medium text-muted"> / {totalCount}</span>
-              </p>
-            </div>
-            <div className="card p-4">
-              <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
-                <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                All caught up
-              </p>
-              <p className="mt-2 text-sm font-medium leading-7 text-foreground">
-                {doneCount >= totalCount && totalCount > 0
+            <StatCard icon={BookOpenCheck} label="Reviewed sessions" value={reviewed.length} />
+            <StatCard
+              icon={ClipboardList}
+              label="Homework completed"
+              value={
+                <>
+                  {doneCount}
+                  <span className="text-base font-medium text-muted"> / {totalCount}</span>
+                </>
+              }
+            />
+            <StatCard
+              icon={CheckCircle2}
+              label="All caught up"
+              value={
+                doneCount >= totalCount && totalCount > 0
                   ? "Yes — great work!"
-                  : `${Math.max(totalCount - doneCount, 0)} item${totalCount - doneCount === 1 ? "" : "s"} to go`}
-              </p>
-            </div>
+                  : `${Math.max(totalCount - doneCount, 0)} item${totalCount - doneCount === 1 ? "" : "s"} to go`
+              }
+              valueClassName="mt-2 text-sm font-medium leading-7 text-foreground"
+            />
           </div>
 
           {/* Latest recommendation */}
           {latest?.review?.next_topic && (
             <section className="mt-8" aria-labelledby="focus-heading">
               <h2 id="focus-heading" className="section-kicker mb-3">Suggested focus</h2>
-              <div className="card flex items-start gap-3.5 border-l-4 border-l-ai p-5">
-                <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-ai" strokeWidth={1.75} aria-hidden="true" />
-                <div>
-                  <p className="text-sm text-muted">Recommended from your latest reviewed session</p>
-                  <p className="mt-1 text-[15px] font-medium text-foreground">
+              <div className="card flex items-start gap-3.5 p-5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-ai-light text-ai">
+                  <Sparkles className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted">
+                    Recommended from your latest reviewed session
+                  </p>
+                  <p className="mt-1 text-[15px] font-medium leading-relaxed text-foreground">
                     {latest.review.next_topic}
                   </p>
                 </div>
@@ -140,14 +142,8 @@ export default async function StudentProgressPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">{s.topic}</p>
-                      <p className="mt-0.5 text-xs text-muted">
-                        {new Date(s.start_at).toLocaleDateString(undefined, {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
+                      <p className="truncate text-[15px] font-medium text-foreground">{s.topic}</p>
+                      <p className="mt-0.5 text-xs text-muted">{formatDateLine(s.start_at)}</p>
                     </div>
                     <StatusBadge status="ai_reviewed" className="shrink-0" />
                   </div>

@@ -3,32 +3,48 @@
 /* ============================================================
    TutorFlow — Modern Academic Workspace
    Centralized design tokens.
-   All component styling flows from these values; avoid hardcoding
-   colors in page components.
+
+   Architecture
+   ------------
+   - :root holds the Light theme (the default). It is the full
+     token set; every component value flows from these variables.
+   - :root[data-theme="..."] blocks override ONLY the tokens each
+     theme changes. Components never hardcode colors.
+   - The <html data-theme> attribute is applied before hydration by
+     an inline bootstrap script (see app/layout.tsx) so there is no
+     flash of the wrong theme.
    ============================================================ */
 
 :root {
-  /* Surfaces */
+  color-scheme: light;
+
+  /* ---- Surfaces ---- */
   --background: #f8fafc; /* cool off-white page background */
   --surface: #ffffff; /* cards, panels, inputs */
-  --surface-muted: #f1f5f9; /* subtle fill areas */
+  --surface-muted: #f1f5f9; /* subtle fill areas, hover fills */
+  --surface-elevated: #ffffff; /* raised panels above the surface */
+  --surface-popover: #ffffff; /* menus, popovers, dialogs */
+  --surface-glass: rgba(255, 255, 255, 0.72); /* frosted glass fill */
+  --glass-border: rgba(226, 232, 240, 0.9);
+  --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.7);
 
-  /* Text */
+  /* ---- Text ---- */
   --foreground: #0f172a; /* charcoal */
   --muted: #64748b; /* secondary text */
   --muted-strong: #475569;
 
-  /* Lines */
+  /* ---- Lines ---- */
   --border: #e2e8f0;
   --border-strong: #cbd5e1;
+  --border-subtle: #eef2f6;
 
-  /* Primary — deep indigo/blue */
+  /* ---- Primary — deep indigo/blue ---- */
   --accent: #4f46e5;
   --accent-strong: #4338ca;
   --accent-light: #eef2ff; /* tinted fill (indigo-50) */
   --accent-ring: #a5b4fc;
 
-  /* Semantic — status colors */
+  /* ---- Semantic — status colors ---- */
   --success: #16a34a;
   --success-strong: #15803d;
   --success-light: #f0fdf4;
@@ -49,23 +65,224 @@
   --ai-strong: #6d28d9;
   --ai-light: #f5f3ff;
 
-  /* Shadows */
+  /* Text that sits on filled color surfaces */
+  --on-accent: #ffffff;
+  --on-success: #ffffff;
+  --on-danger: #ffffff;
+
+  /* ---- Focus ---- */
+  --focus-ring: #4f46e5;
+
+  /* ---- Radius scale ---- */
+  --radius-xs: 0.25rem; /* tiny chips, inner tiles */
+  --radius-sm: 0.375rem; /* small controls, badges */
+  --radius-md: 0.5rem; /* buttons, inputs */
+  --radius-lg: 0.75rem; /* cards, panels */
+  --radius-xl: 1rem; /* large panels */
+  --radius-2xl: 1.25rem; /* dialogs, sheets */
+
+  /* ---- Elevation / shadow system ---- */
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.04);
   --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.04);
   --shadow-card-hover: 0 1px 2px 0 rgb(15 23 42 / 0.05), 0 4px 12px -2px rgb(15 23 42 / 0.08);
+  --shadow-elevated: 0 2px 4px -1px rgb(15 23 42 / 0.06), 0 8px 20px -4px rgb(15 23 42 / 0.1);
+  --shadow-popover: 0 4px 8px -2px rgb(15 23 42 / 0.08), 0 16px 32px -8px rgb(15 23 42 / 0.16);
+  --shadow-dialog: 0 8px 16px -4px rgb(15 23 42 / 0.1), 0 28px 64px -12px rgb(15 23 42 / 0.24);
+  --shadow-glass: 0 4px 16px -4px rgb(15 23 42 / 0.1), var(--glass-highlight);
+  --glow-accent: 0 0 0 1px rgb(79 70 229 / 0.14), 0 8px 24px -8px rgb(79 70 229 / 0.32);
+
+  /* ---- Glass ---- */
+  --blur-glass: 12px;
+
+  /* ---- Motion ---- */
+  --duration-fast: 120ms;
+  --duration-normal: 220ms;
+  --duration-slow: 350ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ============================================================
+   Theme overrides — each block overrides only the tokens it
+   changes. Components stay untouched because they read the
+   shared semantic tokens above.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   INDIGO — focused, intelligent, academic.
+   Cool indigo-tinted page with an indigo primary.
+   ------------------------------------------------------------ */
+:root[data-theme="indigo"] {
+  --background: #f6f7fd;
+  --surface: #ffffff;
+  --surface-muted: #eceef8;
+  --surface-glass: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(228, 231, 243, 0.9);
+  --border: #e4e7f3;
+  --border-strong: #d1d6ea;
+  --border-subtle: #eef0f9;
+  --accent: #4f46e5;
+  --accent-strong: #4338ca;
+  --accent-light: #e8ecff;
+  --accent-ring: #c7cdff;
+  --focus-ring: #6366f1;
+  --glow-accent: 0 0 0 1px rgb(79 70 229 / 0.14), 0 8px 24px -8px rgb(79 70 229 / 0.3);
+}
+
+/* ------------------------------------------------------------
+   GREEN — fresh, calm, natural.
+   ------------------------------------------------------------ */
+:root[data-theme="green"] {
+  --background: #f3f9f5;
+  --surface: #ffffff;
+  --surface-muted: #e9f3ec;
+  --surface-glass: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(221, 235, 225, 0.9);
+  --border: #dfece3;
+  --border-strong: #c7dccc;
+  --border-subtle: #eef7f0;
+  --accent: #059669;
+  --accent-strong: #047857;
+  --accent-light: #e6f5ec;
+  --accent-ring: #6ee7b7;
+  --focus-ring: #059669;
+  --glow-accent: 0 0 0 1px rgb(5 150 105 / 0.14), 0 8px 24px -8px rgb(5 150 105 / 0.3);
+}
+
+/* ------------------------------------------------------------
+   ROSE — warm, friendly, approachable (professional, not playful).
+   ------------------------------------------------------------ */
+:root[data-theme="rose"] {
+  --background: #fdf6f6;
+  --surface: #ffffff;
+  --surface-muted: #f8eaeb;
+  --surface-glass: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(242, 220, 222, 0.9);
+  --border: #f1dcdd;
+  --border-strong: #e3c2c6;
+  --border-subtle: #faf0f1;
+  --accent: #e11d48;
+  --accent-strong: #be123c;
+  --accent-light: #fdebee;
+  --accent-ring: #fda4af;
+  --focus-ring: #e11d48;
+  --glow-accent: 0 0 0 1px rgb(225 29 72 / 0.14), 0 8px 24px -8px rgb(225 29 72 / 0.28);
+}
+
+/* ------------------------------------------------------------
+   AMBER — warm, energetic, optimistic with excellent contrast.
+   ------------------------------------------------------------ */
+:root[data-theme="amber"] {
+  --background: #fdfaf3;
+  --surface: #ffffff;
+  --surface-muted: #f6f0e3;
+  --surface-glass: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(240, 231, 212, 0.9);
+  --border: #f0e7d4;
+  --border-strong: #e0d0b0;
+  --border-subtle: #f8f3ea;
+  --accent: #b45309;
+  --accent-strong: #92400e;
+  --accent-light: #fdeeda;
+  --accent-ring: #fcd34d;
+  --focus-ring: #d97706;
+  --glow-accent: 0 0 0 1px rgb(180 83 9 / 0.14), 0 8px 24px -8px rgb(180 83 9 / 0.3);
+}
+
+/* ------------------------------------------------------------
+   DARK — premium dark SaaS. Deep navy, never pure black.
+   Shadows are tuned differently from light (softer, deeper);
+   semantic "strong" colors shift LIGHTER so text on translucent
+   chips stays readable, and translucent tints replace pale 50s.
+   ------------------------------------------------------------ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #0a101f;
+  --surface: #101a2c;
+  --surface-muted: rgb(148 163 184 / 0.1);
+  --surface-elevated: #152138;
+  --surface-popover: #1a2640;
+  --surface-glass: rgba(21, 33, 56, 0.72);
+  --glass-border: rgb(148 163 184 / 0.22);
+  --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.06);
+
+  --foreground: #e6edf7;
+  --muted: #94a3b8;
+  --muted-strong: #cbd5e1;
+
+  --border: rgb(148 163 184 / 0.14);
+  --border-strong: rgb(148 163 184 / 0.3);
+  --border-subtle: rgb(148 163 184 / 0.07);
+
+  --accent: #6366f1;
+  --accent-strong: #818cf8;
+  --accent-light: rgb(99 102 241 / 0.18);
+  --accent-ring: #a5b4fc;
+
+  --success: #16a34a;
+  --success-strong: #4ade80;
+  --success-light: rgb(22 163 74 / 0.16);
+
+  --info: #3b82f6;
+  --info-strong: #93c5fd;
+  --info-light: rgb(59 130 246 / 0.16);
+
+  --warning: #f59e0b;
+  --warning-strong: #fcd34d;
+  --warning-light: rgb(245 158 11 / 0.16);
+
+  --danger: #dc2626;
+  --danger-strong: #f87171;
+  --danger-light: rgb(220 38 38 / 0.16);
+
+  --ai: #8b5cf6;
+  --ai-strong: #c4b5fd;
+  --ai-light: rgb(139 92 246 / 0.18);
+
+  --on-accent: #ffffff;
+  --on-success: #022c22;
+  --on-danger: #450a0a;
+
+  --focus-ring: #818cf8;
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.35), 0 2px 8px -2px rgb(0 0 0 / 0.3);
+  --shadow-card-hover: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 4px 16px -2px rgb(0 0 0 / 0.4);
+  --shadow-elevated: 0 4px 12px -2px rgb(0 0 0 / 0.4), 0 12px 28px -8px rgb(0 0 0 / 0.5);
+  --shadow-popover: 0 8px 20px -4px rgb(0 0 0 / 0.5), 0 20px 44px -8px rgb(0 0 0 / 0.6);
+  --shadow-dialog: 0 16px 40px -8px rgb(0 0 0 / 0.6), 0 32px 80px -12px rgb(0 0 0 / 0.7);
+  --shadow-glass: 0 8px 24px -6px rgb(0 0 0 / 0.5), var(--glass-highlight);
+  --glow-accent: 0 0 0 1px rgb(99 102 241 / 0.35), 0 8px 24px -6px rgb(99 102 241 / 0.3);
+
+  --blur-glass: 16px;
+}
+
+/* ============================================================
+   Tailwind v4 theme mapping.
+   Because @theme is "inline", each utility compiles to the CSS
+   variable, so overriding a variable per-theme restyles every
+   component that uses the utility.
+   ============================================================ */
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-popover: var(--surface-popover);
+  --color-surface-glass: var(--surface-glass);
+  --color-glass-border: var(--glass-border);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-strong: var(--muted-strong);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-border-subtle: var(--border-subtle);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-light: var(--accent-light);
+  --color-accent-ring: var(--accent-ring);
   --color-success: var(--success);
   --color-success-strong: var(--success-strong);
   --color-success-light: var(--success-light);
@@ -81,8 +298,19 @@
   --color-ai: var(--ai);
   --color-ai-strong: var(--ai-strong);
   --color-ai-light: var(--ai-light);
+  --color-on-accent: var(--on-accent);
+  --color-on-success: var(--on-success);
+  --color-on-danger: var(--on-danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+html {
+  background: var(--background);
 }
 
 body {
@@ -97,9 +325,9 @@ body {
   color: var(--foreground);
 }
 
-/* Consistent, visible keyboard focus everywhere */
+/* Consistent, visible keyboard focus everywhere (theme-aware) */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus-ring, var(--accent));
   outline-offset: 2px;
 }
 
@@ -115,14 +343,16 @@ body {
     justify-content: center;
     gap: 0.5rem;
     border: 1px solid transparent;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     padding: 0.5rem 0.875rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
     font-weight: 500;
     white-space: nowrap;
-    transition: background-color 0.15s ease, border-color 0.15s ease,
-      color 0.15s ease, box-shadow 0.15s ease;
+    transition: background-color var(--duration-fast) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard);
     cursor: pointer;
   }
   .btn:disabled {
@@ -131,7 +361,7 @@ body {
   }
   .btn-primary {
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
   .btn-primary:hover:not(:disabled) {
     background: var(--accent-strong);
@@ -146,14 +376,14 @@ body {
   }
   .btn-danger {
     background: var(--danger);
-    color: #fff;
+    color: var(--on-danger);
   }
   .btn-danger:hover:not(:disabled) {
     background: var(--danger-strong);
   }
   .btn-success {
     background: var(--success);
-    color: #fff;
+    color: var(--on-success);
   }
   .btn-success:hover:not(:disabled) {
     background: var(--success-strong);
@@ -185,13 +415,14 @@ body {
   .input {
     width: 100%;
     border: 1px solid var(--border);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     background: var(--surface);
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
     color: var(--foreground);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard);
   }
   .input::placeholder {
     color: var(--muted);
@@ -224,15 +455,63 @@ body {
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
   }
   .card-hover {
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    transition: border-color var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard);
   }
   .card-hover:hover {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Elevated / popover surfaces (used by future menus, pickers, dialogs) */
+  .surface-elevated {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-elevated);
+  }
+  .surface-popover {
+    background: var(--surface-popover);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-popover);
+  }
+
+  /* Glass surface — use selectively (sidebar, headers, menus, login panel).
+     Falls back to an opaque surface when backdrop-filter is unsupported. */
+  .glass {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-elevated);
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .glass {
+      background: var(--surface-glass);
+      border-color: var(--glass-border);
+      box-shadow: var(--shadow-glass);
+      -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+      backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+    }
+  }
+
+  /* Glass surface without borders/radius — for edge-to-edge shell rails
+     (sidebar, mobile header, drawers). Opaque fallback when
+     backdrop-filter is unsupported keeps content readable. */
+  .glass-surface {
+    background: var(--surface);
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .glass-surface {
+      background: var(--surface-glass);
+      -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+      backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+    }
   }
 
   /* Informational alert banners */
@@ -240,24 +519,24 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     border: 1px solid;
     padding: 0.625rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.4;
   }
   .alert-error {
-    border-color: #fecaca;
+    border-color: color-mix(in srgb, var(--danger) 22%, var(--surface));
     background: var(--danger-light);
     color: var(--danger-strong);
   }
   .alert-success {
-    border-color: #bbf7d0;
+    border-color: color-mix(in srgb, var(--success) 22%, var(--surface));
     background: var(--success-light);
     color: var(--success-strong);
   }
 
-  /* Page typography helpers */
+  /* ---- Typography hierarchy ---- */
   .page-title {
     font-size: 1.5rem;
     line-height: 2rem;
@@ -265,11 +544,58 @@ body {
     letter-spacing: -0.01em;
     color: var(--foreground);
   }
+  .page-subtitle {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    color: var(--muted);
+  }
   .section-kicker {
     font-size: 0.6875rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--muted);
+  }
+  .section-title {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--foreground);
+  }
+  .card-title {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  .caption {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--muted);
+  }
+  .metric-value {
+    font-size: 1.75rem;
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--foreground);
+  }
+}
+
+/* ============================================================
+   Accessibility — reduced motion
+   Disable decorative movement, collapse durations, and keep only
+   functional transitions (which become near-instant).
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

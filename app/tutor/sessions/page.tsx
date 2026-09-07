@@ -2,6 +2,8 @@ import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { CalendarDays, CheckCircle2, CalendarPlus } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
+import SectionHeader from "@/components/SectionHeader";
 import SessionRow from "@/components/SessionRow";
 import EmptyState from "@/components/EmptyState";
 
@@ -49,31 +51,24 @@ export default async function SessionsPage() {
 
   return (
     <div>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="page-title">Sessions</h1>
-          <p className="mt-1 text-sm text-muted">
-            {upcomingCount + pastCount === 0
-              ? "Plan, run, and review your tutoring sessions"
-              : `${upcomingCount} upcoming · ${pastCount} past`}
-          </p>
-        </div>
-        <Link href="/tutor/sessions/new" className="btn btn-primary self-start sm:self-auto">
-          <CalendarPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-          Schedule session
-        </Link>
-      </div>
+      <PageHeader
+        title="Sessions"
+        subtitle={
+          upcomingCount + pastCount === 0
+            ? "Plan, run, and review your tutoring sessions"
+            : `${upcomingCount} upcoming · ${pastCount} past`
+        }
+        actions={
+          <Link href="/tutor/sessions/new" className="btn btn-primary">
+            <CalendarPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            Schedule session
+          </Link>
+        }
+      />
 
       {/* Upcoming */}
       <section className="mt-8" aria-labelledby="upcoming-heading">
-        <div className="mb-3 flex items-center gap-2.5">
-          <h2 id="upcoming-heading" className="text-sm font-semibold text-foreground">
-            Upcoming
-          </h2>
-          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
-            {upcomingCount}
-          </span>
-        </div>
+        <SectionHeader id="upcoming-heading" title="Upcoming" count={upcomingCount} className="mb-3" />
         {upcoming && upcoming.length > 0 ? (
           <div className="space-y-2.5">
             {upcoming.map((s) => (
@@ -106,14 +101,7 @@ export default async function SessionsPage() {
 
       {/* Past */}
       <section className="mt-10" aria-labelledby="past-heading">
-        <div className="mb-3 flex items-center gap-2.5">
-          <h2 id="past-heading" className="text-sm font-semibold text-foreground">
-            Past
-          </h2>
-          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
-            {pastCount}
-          </span>
-        </div>
+        <SectionHeader id="past-heading" title="Past" count={pastCount} className="mb-3" />
         {past && past.length > 0 ? (
           <div className="space-y-2.5">
             {past.map((s) => (

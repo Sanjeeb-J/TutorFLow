@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronRight, Plus, Search, Users } from "lucide-react";
+import { ChevronRight, Mail, Plus, Search, Users } from "lucide-react";
+import { formatDateLine, formatTime } from "@/lib/format";
+import Avatar from "./Avatar";
 import EmptyState from "./EmptyState";
 
 export interface StudentSummary {
@@ -16,23 +18,6 @@ export interface StudentSummary {
 export interface NextSessionInfo {
   topic: string;
   start_at: string;
-}
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
-function formatNextSession(startAt: string) {
-  const d = new Date(startAt);
-  return {
-    date: d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }),
-    time: d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
-  };
 }
 
 export default function StudentsManager({
@@ -71,66 +56,87 @@ export default function StudentsManager({
         />
       ) : (
         <>
-          {/* Search */}
-          <div className="relative mb-4 max-w-sm">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-              strokeWidth={1.75}
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name, subject, or level…"
-              aria-label="Search students"
-              className="input pl-9"
-            />
+          {/* Search + result count */}
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:max-w-sm">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name, subject, or level…"
+                aria-label="Search students"
+                className="input pl-9"
+              />
+            </div>
+            <p className="shrink-0 text-sm text-muted" aria-live="polite">
+              {filtered.length === students.length
+                ? `${students.length} student${students.length === 1 ? "" : "s"}`
+                : `Showing ${filtered.length} of ${students.length} students`}
+            </p>
           </div>
-
-          <p className="mb-3 text-sm text-muted" aria-live="polite">
-            {filtered.length === students.length
-              ? `${students.length} student${students.length === 1 ? "" : "s"}`
-              : `Showing ${filtered.length} of ${students.length} students`}
-          </p>
 
           {filtered.length > 0 ? (
             <div className="space-y-2.5">
               {filtered.map((student) => {
                 const next = nextSessions[student.id];
-                const nextFmt = next ? formatNextSession(next.start_at) : null;
                 return (
                   <Link
                     key={student.id}
                     href={`/tutor/students/${student.id}`}
                     className="card card-hover group flex items-center gap-4 px-4 py-3.5"
                   >
-                    <span
-                      aria-hidden="true"
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-light text-sm font-semibold text-accent-strong"
-                    >
-                      {initials(student.name)}
-                    </span>
+                    <Avatar name={student.name} size="md" />
+
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
+                      <p className="truncate text-[15px] font-medium text-foreground">
                         {student.name}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-muted">
-                        {student.subject}
-                        {student.current_level ? ` · ${student.current_level}` : ""}
-                        {student.email ? ` · ${student.email}` : ""}
-                      </p>
+                      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
+                        <span className="shrink-0 font-medium text-muted-strong">
+                          {student.subject}
+                        </span>
+                        {student.current_level ? (
+                          <span className="truncate">
+                            <span aria-hidden="true">·</span> {student.current_level}
+                          </span>
+                        ) : null}
+                        {student.email ? (
+                          <span className="flex min-w-0 items-center gap-1 truncate">
+                            <span aria-hidden="true" className="shrink-0">
+                              ·
+                            </span>
+                            <Mail
+                              className="h-3 w-3 shrink-0 text-muted"
+                              strokeWidth={1.75}
+                              aria-hidden="true"
+                            />
+                            <span className="truncate">{student.email}</span>
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
+
                     {next ? (
-                      <div className="hidden shrink-0 text-right md:block">
-                        <p className="text-xs font-medium text-foreground">Next session</p>
-                        <p className="mt-0.5 max-w-[10rem] truncate text-xs text-muted">
-                          {nextFmt?.date} · {nextFmt?.time} — {next.topic}
+                      <div className="hidden shrink-0 flex-col items-end gap-0.5 md:flex">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                          Next session
+                        </p>
+                        <p className="max-w-[12rem] truncate text-xs font-medium text-muted-strong">
+                          {next.topic}
+                        </p>
+                        <p className="text-xs tabular-nums text-muted">
+                          {formatDateLine(next.start_at)} · {formatTime(next.start_at)}
                         </p>
                       </div>
                     ) : null}
+
                     <ChevronRight
-                      className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5"
+                      className="h-4 w-4 shrink-0 text-muted transition-transform duration-[var(--duration-fast)] ease-[var(--ease-standard)] group-hover:translate-x-0.5"
                       strokeWidth={1.75}
                       aria-hidden="true"
                     />

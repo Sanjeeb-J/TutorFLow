@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, BookOpen, Loader2 } from "lucide-react";
+import { BookOpen, Loader2 } from "lucide-react";
+import Alert from "@/components/Alert";
 
 export default function LoginPageForm() {
   const router = useRouter();
@@ -47,7 +48,10 @@ export default function LoginPageForm() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-light">
+          <span
+            className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-light"
+            aria-hidden="true"
+          >
             <BookOpen className="h-6 w-6 text-accent" strokeWidth={2} aria-hidden="true" />
           </span>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
@@ -58,12 +62,7 @@ export default function LoginPageForm() {
 
         <div className="card p-6">
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            {error && (
-              <div className="alert alert-error" role="alert">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{error}</span>
-              </div>
-            )}
+            {error && <Alert>{error}</Alert>}
 
             <div className="field">
               <label htmlFor="email" className="label">
@@ -97,7 +96,7 @@ export default function LoginPageForm() {
               />
             </div>
 
-            <button type="submit" disabled={loading} className="btn btn-primary w-full">
+            <button type="submit" disabled={loading} className="btn btn-primary min-h-11 w-full">
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

@@ -1,6 +1,8 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { CalendarDays, CheckCircle2 } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
+import SectionHeader from "@/components/SectionHeader";
 import SessionRow from "@/components/SessionRow";
 import EmptyState from "@/components/EmptyState";
 
@@ -39,24 +41,17 @@ export default async function StudentSessionsPage() {
 
   return (
     <div>
-      <div>
-        <h1 className="page-title">Sessions</h1>
-        <p className="mt-1 text-sm text-muted">
-          {upcomingCount + pastCount === 0
+      <PageHeader
+        title="Sessions"
+        subtitle={
+          upcomingCount + pastCount === 0
             ? "Your tutoring sessions"
-            : `${upcomingCount} upcoming · ${pastCount} past`}
-        </p>
-      </div>
+            : `${upcomingCount} upcoming · ${pastCount} past`
+        }
+      />
 
       <section className="mt-8" aria-labelledby="upcoming-heading">
-        <div className="mb-3 flex items-center gap-2.5">
-          <h2 id="upcoming-heading" className="text-sm font-semibold text-foreground">
-            Upcoming
-          </h2>
-          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
-            {upcomingCount}
-          </span>
-        </div>
+        <SectionHeader id="upcoming-heading" title="Upcoming" count={upcomingCount} className="mb-3" />
         {upcoming && upcoming.length > 0 ? (
           <div className="space-y-2.5">
             {upcoming.map((s) => {
@@ -85,14 +80,7 @@ export default async function StudentSessionsPage() {
       </section>
 
       <section className="mt-10" aria-labelledby="past-heading">
-        <div className="mb-3 flex items-center gap-2.5">
-          <h2 id="past-heading" className="text-sm font-semibold text-foreground">
-            Past
-          </h2>
-          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-strong">
-            {pastCount}
-          </span>
-        </div>
+        <SectionHeader id="past-heading" title="Past" count={pastCount} className="mb-3" />
         {past && past.length > 0 ? (
           <div className="space-y-2.5">
             {past.map((s) => {

@@ -12,18 +12,10 @@ import {
   Target,
   TrendingDown,
 } from "lucide-react";
+import Avatar from "@/components/Avatar";
 import SessionRow from "@/components/SessionRow";
 import EmptyState from "@/components/EmptyState";
 import ProgressSummary from "@/components/ProgressSummary";
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 export default async function StudentDetailPage({
   params,
@@ -82,12 +74,7 @@ export default async function StudentDetailPage({
       {/* Student header */}
       <div className="card mt-4 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <span
-            aria-hidden="true"
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-accent-light text-lg font-semibold text-accent-strong"
-          >
-            {initials(student.name)}
-          </span>
+          <Avatar name={student.name} size="lg" />
           <div className="min-w-0">
             <h1 className="page-title truncate">{student.name}</h1>
             <p className="mt-0.5 text-sm text-muted">

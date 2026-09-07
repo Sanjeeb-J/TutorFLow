@@ -1,10 +1,10 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
 import SessionActions from "@/components/SessionActions";
 import StatusBadge from "@/components/StatusBadge";
+import { formatDateLine, formatTimeRange } from "@/lib/format";
 
 export default async function SessionDetailPage({
   params,
@@ -59,25 +59,21 @@ export default async function SessionDetailPage({
 
   return (
     <div>
-      <Link
-        href="/tutor/sessions"
-        className="inline-flex items-center gap-1 text-sm text-muted-strong transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-        Back to sessions
-      </Link>
-
-      {/* Header */}
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="page-title">{session.topic}</h1>
-          <p className="mt-1 text-sm text-muted">
+      <PageHeader
+        backHref="/tutor/sessions"
+        backLabel="Back to sessions"
+        title={session.topic}
+        subtitle={
+          <span className="block">
             {student?.name} · {student?.subject}
             {student?.current_level ? ` · ${student.current_level}` : ""}
-          </p>
-        </div>
-        <StatusBadge status={session.status} className="shrink-0 self-start sm:mt-1" />
-      </div>
+            <span className="mt-0.5 block text-xs">
+              {formatDateLine(session.start_at)} · {formatTimeRange(session.start_at, session.end_at)}
+            </span>
+          </span>
+        }
+        actions={<StatusBadge status={session.status} className="shrink-0" />}
+      />
 
       <SessionActions
         sessionId={session.id}
