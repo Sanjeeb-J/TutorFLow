@@ -61,7 +61,7 @@ export const THEMES: ThemeMeta[] = [
   },
 ];
 
-export const DEFAULT_THEME: ThemeId = "light";
+export const DEFAULT_THEME: ThemeId = "dark";
 
 /** Namespaced localStorage key. Never accessed outside this module. */
 export const THEME_STORAGE_KEY = "tf:theme";
@@ -98,4 +98,17 @@ export function getThemeBootstrapScript(): string {
     "}",
     "})();",
   ].join("");
+}
+
+/** SSR mirror of the bootstrap script’s theme resolution.
+ * Uses the same allowed list and fallback so the server can render
+ * <html data-theme> with the value the client would compute, avoiding
+ * a hydration mismatch.
+ *
+ * NOTE: This is only valid in server/client-aligned contexts. It intentionally
+ * does not read localStorage on the server; any theme preference is applied
+ * from the client-side bootstrap and ThemeProvider after hydration.
+ */
+export function resolveInitialTheme(): ThemeId {
+  return DEFAULT_THEME;
 }

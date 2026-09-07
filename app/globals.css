@@ -6,7 +6,7 @@
 
    Architecture
    ------------
-   - :root holds the Light theme (the default). It is the full
+   - :root holds the Light theme (the base token set). It is the full
      token set; every component value flows from these variables.
    - :root[data-theme="..."] blocks override ONLY the tokens each
      theme changes. Components never hardcode colors.

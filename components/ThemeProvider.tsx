@@ -24,7 +24,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 /**
  * Read the theme applied by the pre-hydration bootstrap script.
  * The <html data-theme> attribute is always set (validated, defaulting
- * to "light"), so this never disagrees with the CSS on first paint.
+ * to "dark"), so this never disagrees with the CSS on first paint.
  */
 function readAppliedTheme(): ThemeId {
   if (typeof window === "undefined") return DEFAULT_THEME;
